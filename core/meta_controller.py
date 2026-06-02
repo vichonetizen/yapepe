@@ -18,6 +18,7 @@ from core.document_store import search_documents
 from core.semantic_memory import hybrid_search_documents
 from core.learning_engine import search_learnings, build_pac_context
 from core.recipe_store import search_recipes, build_recipe_context
+import core.recon_config as recon_config
 
 
 class MetaController:
@@ -142,9 +143,13 @@ class MetaController:
                 search_query = f"{user_input} {recent_user}"
             # Búsqueda híbrida: BM25 (léxico) + embeddings (significado).
             # Si no hay backend de embeddings, cae automáticamente a BM25 puro.
-            raw_hits = await hybrid_search_documents(search_query, top_k=5)
+            # top_k y umbral los puede auto-ajustar la Capa 5 (recon_config), con
+            # los valores de fábrica de siempre como defecto.
+            top_k = int(recon_config.get("rag_top_k"))
+            score_min = float(recon_config.get("rag_score_min"))
+            raw_hits = await hybrid_search_documents(search_query, top_k=top_k)
             # Filtrar fragmentos con relevancia casi nula
-            doc_hits = [h for h in raw_hits if h["score"] > 0.05]
+            doc_hits = [h for h in raw_hits if h["score"] > score_min]
             if doc_hits:
                 chunks = []
                 for hit in doc_hits:

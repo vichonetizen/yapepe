@@ -79,15 +79,25 @@ class KnowledgeGraph:
             self.save()
             self._dirty = 0
 
+    def _max_nodes(self) -> int:
+        """Tope de nodos: lo puede auto-ajustar la Capa 5 (recon_config), con
+        MAX_KG_NODES como defecto si aún no hay config."""
+        try:
+            import core.recon_config as recon_config
+            return int(recon_config.get("kg_max_nodes"))
+        except Exception:
+            return MAX_KG_NODES
+
     def _prune_if_needed(self):
-        if self.graph.number_of_nodes() <= MAX_KG_NODES:
+        cap = self._max_nodes()
+        if self.graph.number_of_nodes() <= cap:
             return
         sorted_nodes = sorted(
             self.graph.nodes(data=True),
             key=lambda x: x[1].get("weight", 1),
             reverse=True,
         )
-        keep = {n for n, _ in sorted_nodes[:MAX_KG_NODES]}
+        keep = {n for n, _ in sorted_nodes[:cap]}
         self.graph.remove_nodes_from([n for n in list(self.graph.nodes()) if n not in keep])
 
     def get_context(self, query: str, max_concepts: int = 6) -> str:

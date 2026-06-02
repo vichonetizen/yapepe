@@ -76,14 +76,16 @@ CHECKS = [
     ("3. Capa 2 — Inferencia local (Ollama)",     "tests/test_local_inference.py"),
     ("4. Capa 3 — Recetas de tareas",             "tests/test_recipes.py"),
     ("5. Capa 4 — Autonomía",                     "tests/test_autonomy.py"),
-    ("6. Estado de la base de conocimiento",      "state"),
-    ("7. Consulta semántica real (español)",      "query"),
+    ("6. Capa 5 — Auto-reconstrucción",           "tests/test_self_reconstruction.py"),
+    ("7. Capa 6 — Bucle agente",                  "tests/test_agent.py"),
+    ("8. Estado de la base de conocimiento",      "state"),
+    ("9. Consulta semántica real (español)",      "query"),
 ]
 
 
 async def main():
     print("=" * 64)
-    print("  PENTAMODAL — LAS 7 PRUEBAS")
+    print("  PENTAMODAL — LAS 9 PRUEBAS")
     print("=" * 64)
     passed = 0
     for label, kind in CHECKS:

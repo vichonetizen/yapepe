@@ -324,7 +324,7 @@
       "id": "None"
     },
     {
-      "weight": 2,
+      "weight": 3,
       "type": "concept",
       "id": "relevante"
     },
@@ -354,7 +354,7 @@
       "id": "cognición"
     },
     {
-      "weight": 1,
+      "weight": 2,
       "type": "concept",
       "id": "Maturana"
     },
@@ -384,7 +384,7 @@
       "id": "implica"
     },
     {
-      "weight": 2,
+      "weight": 3,
       "type": "concept",
       "id": "nuestra"
     },
@@ -544,7 +544,7 @@
       "id": "importante"
     },
     {
-      "weight": 2,
+      "weight": 3,
       "type": "concept",
       "id": "Claro"
     },
@@ -569,7 +569,7 @@
       "id": "particular"
     },
     {
-      "weight": 2,
+      "weight": 3,
       "type": "concept",
       "id": "ayudarte"
     },
@@ -659,7 +659,7 @@
       "id": "carpeta"
     },
     {
-      "weight": 2,
+      "weight": 3,
       "type": "concept",
       "id": "respuesta"
     },
@@ -699,7 +699,7 @@
       "id": "cuanto"
     },
     {
-      "weight": 1,
+      "weight": 2,
       "type": "concept",
       "id": "proporcionado"
     },
@@ -714,7 +714,7 @@
       "id": "usuario"
     },
     {
-      "weight": 1,
+      "weight": 2,
       "type": "concept",
       "id": "Puedo"
     },
@@ -794,12 +794,12 @@
       "id": "individua"
     },
     {
-      "weight": 3,
+      "weight": 4,
       "type": "concept",
       "id": "humano"
     },
     {
-      "weight": 2,
+      "weight": 3,
       "type": "concept",
       "id": "teoría"
     },
@@ -919,7 +919,7 @@
       "id": "Modelo"
     },
     {
-      "weight": 1,
+      "weight": 2,
       "type": "concept",
       "id": "entorno"
     },
@@ -969,7 +969,7 @@
       "id": "conversación"
     },
     {
-      "weight": 1,
+      "weight": 3,
       "type": "concept",
       "id": "seguir"
     },
@@ -1064,7 +1064,7 @@
       "id": "genial"
     },
     {
-      "weight": 1,
+      "weight": 2,
       "type": "concept",
       "id": "espacio"
     },
@@ -1142,6 +1142,556 @@
       "weight": 1,
       "type": "concept",
       "id": "patrones"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "Hay"
+    },
+    {
+      "weight": 2,
+      "type": "concept",
+      "id": "Qué"
+    },
+    {
+      "weight": 2,
+      "type": "concept",
+      "id": "previa"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "Sin"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "proporcionar"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "interés"
+    },
+    {
+      "weight": 2,
+      "type": "concept",
+      "id": "capacidad"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "interactiva"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "abordar"
+    },
+    {
+      "weight": 2,
+      "type": "concept",
+      "id": "puedas"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "entrenado"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "lenguaje"
+    },
+    {
+      "weight": 2,
+      "type": "concept",
+      "id": "aprender"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "participa"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "hacerme"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "constantes"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "Mira"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "sugerencias"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "proceso"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "activo"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "Blogs"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "acerques"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "permitirá"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "ayudará"
+    },
+    {
+      "weight": 2,
+      "type": "concept",
+      "id": "prácticas"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "propósito"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "amplia"
+    },
+    {
+      "weight": 3,
+      "type": "concept",
+      "id": "podrás"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "automatizacion"
+    },
+    {
+      "weight": 2,
+      "type": "concept",
+      "id": "conocimientos"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "querías"
+    },
+    {
+      "weight": 2,
+      "type": "concept",
+      "id": "recursos"
+    },
+    {
+      "weight": 3,
+      "type": "concept",
+      "id": "código"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "confusión"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "muchos"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "existencias"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "empresariales"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "Considerar"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "generales"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "investigaciones"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "herramientas"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "Otras"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "proporcione"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "usuarios"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "inteligencia"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "priorizarlas"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "Mantener"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "siguiente"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "optimizar"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "cambio"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "aplicaciones"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "reformas"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "sentimientos"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "máximo"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "Después"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "escribe"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "siguientes"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "gustaría"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "gráfico"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "algunos"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "preguntas"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "sentimiento"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "líneas"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "operar"
+    },
+    {
+      "weight": 2,
+      "type": "concept",
+      "id": "nuestras"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "comprenderlo"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "Empecemos"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "profundo"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "empecemos"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "emblemáticos"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "biológica"
+    },
+    {
+      "weight": 4,
+      "type": "concept",
+      "id": "corporal"
+    },
+    {
+      "weight": 2,
+      "type": "concept",
+      "id": "desarrollar"
+    },
+    {
+      "weight": 2,
+      "type": "concept",
+      "id": "profundidad"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "continúa"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "tendencia"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "conexión"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "estudios"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "menciono"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "parecen"
+    },
+    {
+      "weight": 3,
+      "type": "concept",
+      "id": "ejercicio"
+    },
+    {
+      "weight": 2,
+      "type": "concept",
+      "id": "regulares"
+    },
+    {
+      "weight": 2,
+      "type": "concept",
+      "id": "actividades"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "calendario"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "dormir"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "comunicionar"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "Comunicionar"
+    },
+    {
+      "weight": 2,
+      "type": "concept",
+      "id": "mejorar"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "Concencia"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "incorpora"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "Establece"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "concencia"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "Practicar"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "dedicado"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "Conociendo"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "conociendo"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "relajar"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "evitar"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "esfuerzos"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "Hábitos"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "mejorarla"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "tácidos"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "estemos"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "sentir"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "puedes"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "sientas"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "Estas"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "cómodo"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "ricerca"
+    },
+    {
+      "weight": 1,
+      "type": "concept",
+      "id": "presente"
     }
   ],
   "edges": [
@@ -3110,6 +3660,30 @@
     {
       "weight": 1,
       "relation": "relacionado_con",
+      "source": "Puedo",
+      "target": "recursos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Puedo",
+      "target": "código"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Puedo",
+      "target": "muchos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Puedo",
+      "target": "conocimientos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
       "source": "investigar",
       "target": "respecto"
     },
@@ -3238,6 +3812,48 @@
       "relation": "relacionado_con",
       "source": "humano",
       "target": "opciones"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "humano",
+      "target": "menciono"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "humano",
+      "target": "parecen"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "humano",
+      "target": "entorno"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "teoría",
+      "target": "Empecemos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "teoría",
+      "target": "empecemos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "teoría",
+      "target": "emblemáticos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "teoría",
+      "target": "biológica"
     },
     {
       "weight": 1,
@@ -3716,6 +4332,18 @@
     {
       "weight": 1,
       "relation": "relacionado_con",
+      "source": "espacio",
+      "target": "Practicar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "espacio",
+      "target": "dedicado"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
       "source": "antepasados",
       "target": "quieres"
     },
@@ -3814,6 +4442,1014 @@
       "relation": "relacionado_con",
       "source": "psiquiatra",
       "target": "programa"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Hay",
+      "target": "ayudarte"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "previa",
+      "target": "Sin"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "previa",
+      "target": "capacidad"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "previa",
+      "target": "lenguaje"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "previa",
+      "target": "aprender"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "previa",
+      "target": "proporcione"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Sin",
+      "target": "capacidad"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Sin",
+      "target": "lenguaje"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Sin",
+      "target": "aprender"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Sin",
+      "target": "interactiva"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "proporcionar",
+      "target": "entrenado"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "interés",
+      "target": "abordar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "capacidad",
+      "target": "lenguaje"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "capacidad",
+      "target": "aprender"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "puedas",
+      "target": "hacerme"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "puedas",
+      "target": "sugerencias"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "puedas",
+      "target": "acerques"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "lenguaje",
+      "target": "aprender"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "aprender",
+      "target": "Qué"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "aprender",
+      "target": "líneas"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "hacerme",
+      "target": "sugerencias"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "hacerme",
+      "target": "acerques"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "constantes",
+      "target": "ayudará"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Mira",
+      "target": "Blogs"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "sugerencias",
+      "target": "acerques"
+    },
+    {
+      "weight": 2,
+      "relation": "relacionado_con",
+      "source": "proceso",
+      "target": "activo"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "prácticas",
+      "target": "Puedo"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "prácticas",
+      "target": "recursos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "prácticas",
+      "target": "código"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "prácticas",
+      "target": "muchos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "prácticas",
+      "target": "ejercicio"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "prácticas",
+      "target": "dormir"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "prácticas",
+      "target": "comunicionar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "prácticas",
+      "target": "Comunicionar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "propósito",
+      "target": "conocimientos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "podrás",
+      "target": "automatizacion"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "podrás",
+      "target": "proporcionado"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "podrás",
+      "target": "conociendo"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "podrás",
+      "target": "Hábitos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "querías",
+      "target": "confusión"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "recursos",
+      "target": "código"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "recursos",
+      "target": "muchos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "código",
+      "target": "muchos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "código",
+      "target": "Considerar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "existencias",
+      "target": "previa"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "existencias",
+      "target": "proporcione"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "empresariales",
+      "target": "investigaciones"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "empresariales",
+      "target": "herramientas"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "generales",
+      "target": "Otras"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "investigaciones",
+      "target": "herramientas"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "inteligencia",
+      "target": "optimizar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "inteligencia",
+      "target": "capacidad"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Mantener",
+      "target": "cambio"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "siguiente",
+      "target": "respuesta"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "optimizar",
+      "target": "capacidad"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "sentimientos",
+      "target": "Después"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "sentimientos",
+      "target": "gráfico"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "sentimientos",
+      "target": "algunos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "sentimientos",
+      "target": "preguntas"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "sentimientos",
+      "target": "sentimiento"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "máximo",
+      "target": "escribe"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "máximo",
+      "target": "siguientes"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "máximo",
+      "target": "gustaría"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "máximo",
+      "target": "aprender"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "máximo",
+      "target": "líneas"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Después",
+      "target": "gráfico"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Después",
+      "target": "algunos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Después",
+      "target": "preguntas"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Después",
+      "target": "sentimiento"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "escribe",
+      "target": "siguientes"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "escribe",
+      "target": "gustaría"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "escribe",
+      "target": "aprender"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "escribe",
+      "target": "líneas"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "siguientes",
+      "target": "gustaría"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "siguientes",
+      "target": "aprender"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "siguientes",
+      "target": "líneas"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "gustaría",
+      "target": "aprender"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "gustaría",
+      "target": "líneas"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "gráfico",
+      "target": "algunos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "gráfico",
+      "target": "preguntas"
+    },
+    {
+      "weight": 2,
+      "relation": "relacionado_con",
+      "source": "gráfico",
+      "target": "sentimiento"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "algunos",
+      "target": "preguntas"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "algunos",
+      "target": "sentimiento"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "preguntas",
+      "target": "sentimiento"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "nuestras",
+      "target": "nuestra"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "comprenderlo",
+      "target": "Maturana"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Empecemos",
+      "target": "empecemos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Empecemos",
+      "target": "emblemáticos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Empecemos",
+      "target": "biológica"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "empecemos",
+      "target": "emblemáticos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "empecemos",
+      "target": "biológica"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "emblemáticos",
+      "target": "biológica"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "corporal",
+      "target": "profundidad"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "corporal",
+      "target": "podrás"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "corporal",
+      "target": "proporcionado"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "corporal",
+      "target": "Concencia"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "corporal",
+      "target": "concencia"
+    },
+    {
+      "weight": 2,
+      "relation": "relacionado_con",
+      "source": "corporal",
+      "target": "Practicar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "corporal",
+      "target": "actividades"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "corporal",
+      "target": "espacio"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "corporal",
+      "target": "dedicado"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "corporal",
+      "target": "regulares"
+    },
+    {
+      "weight": 2,
+      "relation": "relacionado_con",
+      "source": "corporal",
+      "target": "mejorar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "corporal",
+      "target": "Establece"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "corporal",
+      "target": "Hábitos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "profundidad",
+      "target": "tendencia"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "profundidad",
+      "target": "humano"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "profundidad",
+      "target": "menciono"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "profundidad",
+      "target": "parecen"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "profundidad",
+      "target": "entorno"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "profundidad",
+      "target": "podrás"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "profundidad",
+      "target": "proporcionado"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "continúa",
+      "target": "relevante"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "tendencia",
+      "target": "humano"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "tendencia",
+      "target": "menciono"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "tendencia",
+      "target": "parecen"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "tendencia",
+      "target": "entorno"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "menciono",
+      "target": "parecen"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "menciono",
+      "target": "entorno"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "parecen",
+      "target": "entorno"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "ejercicio",
+      "target": "regulares"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "ejercicio",
+      "target": "actividades"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "ejercicio",
+      "target": "calendario"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "ejercicio",
+      "target": "dormir"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "ejercicio",
+      "target": "comunicionar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "ejercicio",
+      "target": "Comunicionar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "ejercicio",
+      "target": "evitar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "ejercicio",
+      "target": "esfuerzos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "ejercicio",
+      "target": "Conociendo"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "ejercicio",
+      "target": "podrás"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "ejercicio",
+      "target": "conociendo"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "ejercicio",
+      "target": "Hábitos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "regulares",
+      "target": "actividades"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "regulares",
+      "target": "calendario"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "regulares",
+      "target": "mejorar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "regulares",
+      "target": "Establece"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "actividades",
+      "target": "calendario"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "actividades",
+      "target": "espacio"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "actividades",
+      "target": "Practicar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "actividades",
+      "target": "dedicado"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "dormir",
+      "target": "comunicionar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "dormir",
+      "target": "Comunicionar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "comunicionar",
+      "target": "Comunicionar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "mejorar",
+      "target": "Establece"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "mejorar",
+      "target": "Hábitos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Concencia",
+      "target": "concencia"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Concencia",
+      "target": "Practicar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "incorpora",
+      "target": "espacio"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "concencia",
+      "target": "Practicar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Practicar",
+      "target": "dedicado"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Conociendo",
+      "target": "podrás"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Conociendo",
+      "target": "conociendo"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "Conociendo",
+      "target": "Hábitos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "conociendo",
+      "target": "Hábitos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "relajar",
+      "target": "evitar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "evitar",
+      "target": "esfuerzos"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "mejorarla",
+      "target": "desarrollar"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "tácidos",
+      "target": "sentir"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "tácidos",
+      "target": "puedes"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "tácidos",
+      "target": "sientas"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "tácidos",
+      "target": "cómodo"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "estemos",
+      "target": "ricerca"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "sentir",
+      "target": "puedes"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "sentir",
+      "target": "sientas"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "sentir",
+      "target": "cómodo"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "puedes",
+      "target": "sientas"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "puedes",
+      "target": "cómodo"
+    },
+    {
+      "weight": 1,
+      "relation": "relacionado_con",
+      "source": "sientas",
+      "target": "cómodo"
     }
   ]
 }

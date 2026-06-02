@@ -53,7 +53,13 @@ from core.recipe_store import (
 from core.autonomy import (
     ensure_indexes, consolidate_memory, status as autonomy_status,
 )
-from config import AUTONOMY_INTERVAL_HOURS, IS_VERCEL
+import core.self_reconstruction as recon
+import core.checkpoints as checkpoints
+import core.associations as associations
+import core.agent as agent
+from config import (
+    AUTONOMY_INTERVAL_HOURS, IS_VERCEL, RECON_ENABLED, RECON_MODE, RECON_MAX_CYCLES,
+)
 
 kg        = KnowledgeGraph()
 meta_ctrl = MetaController(kg)
@@ -126,14 +132,25 @@ async def lifespan(app: FastAPI):
 
 
 async def _autonomy_loop():
-    """Consolida la memoria cada AUTONOMY_INTERVAL_HOURS horas, en segundo plano."""
+    """Cada AUTONOMY_INTERVAL_HOURS, en segundo plano y sin que el usuario lo pida:
+      1. consolida la memoria (Capa 4), y
+      2. ejecuta un ciclo de auto-reconstrucción (Capa 5): teje asociaciones
+         neuronales y reconfigura parámetros seguros contra el oráculo fijo.
+    Es el "bucle maestro autónomo" del plan operativo §3."""
     interval = AUTONOMY_INTERVAL_HOURS * 3600
+    cycles = 0
     while True:
         await asyncio.sleep(interval)
         try:
             await consolidate_memory(kg)
         except Exception:
             pass
+        if RECON_ENABLED and (RECON_MAX_CYCLES == 0 or cycles < RECON_MAX_CYCLES):
+            try:
+                await recon.run_cycle(kg)
+                cycles += 1
+            except Exception:
+                pass
 
 
 app = FastAPI(title="Pentamodal 3.0 — Multi-Provider", lifespan=lifespan)
@@ -654,6 +671,109 @@ async def autonomy_consolidate():
     """Dispara una consolidación de memoria a mano (fusiona, poda, indexa pendientes)."""
     report = await consolidate_memory(kg)
     return {"status": "ok", "report": report}
+
+
+# ── Capa 5 — Auto-reconstrucción (base estructural de los 5 documentos) ──────────
+@app.get("/recon/status")
+async def recon_status():
+    """Estado del bucle maestro: línea base del oráculo, perfil y último ciclo."""
+    return {"enabled": RECON_ENABLED, "mode": RECON_MODE, **recon.status()}
+
+
+@app.post("/recon/cycle")
+async def recon_cycle():
+    """Ejecuta un ciclo de auto-reconstrucción a mano (perfilar → proponer sobre
+    copia → evaluar contra oráculo fijo → promover/descartar → vigilar)."""
+    report = await recon.run_cycle(kg)
+    return {"status": "ok", "report": report}
+
+
+@app.get("/recon/associations")
+async def recon_associations():
+    """Densidad asociativa actual del grafo (asociaciones neuronales tejidas)."""
+    return associations.stats(kg.graph)
+
+
+@app.get("/recon/proposals")
+async def recon_proposals():
+    """Propuestas pendientes de aprobación (cambios que afectan a las respuestas)."""
+    return recon.list_proposals()
+
+
+@app.post("/recon/proposals/{pid}/approve")
+async def recon_proposal_approve(pid: int):
+    res = recon.resolve_proposal(pid, approve=True, kg=kg)
+    if not res.get("ok"):
+        raise HTTPException(400, res.get("error", "no se pudo aplicar"))
+    return res
+
+
+@app.post("/recon/proposals/{pid}/reject")
+async def recon_proposal_reject(pid: int):
+    res = recon.resolve_proposal(pid, approve=False, kg=kg)
+    if not res.get("ok"):
+        raise HTTPException(404, res.get("error", "no encontrada"))
+    return res
+
+
+@app.get("/recon/checkpoints")
+async def recon_checkpoints():
+    """Checkpoints reversibles del estado mutable (config + grafo)."""
+    return {"latest": checkpoints.latest(), "all": checkpoints.list_all()}
+
+
+# ── Capa 6 — Bucle agente (ejecutar tareas) ──────────────────────────────────────
+class AgentRunRequest(BaseModel):
+    task:           str
+    session_id:     str  = "agent"
+    max_steps:      int  = 0          # 0 = usar el default del config
+    allow_write:    bool = True       # escribir en el workspace aislado
+    allow_commands: bool = False      # ejecutar comandos (con confirmación)
+
+
+class AgentContinueRequest(BaseModel):
+    run_id:  str
+    approve: bool
+
+
+@app.post("/agent/run")
+async def agent_run(req: AgentRunRequest):
+    """Lanza el bucle agente sobre una tarea. Devuelve el resultado o, si un
+    comando requiere confirmación, status 'awaiting_approval' con un run_id."""
+    return await agent.run(
+        req.task, ai_client=ai_client, session_id=req.session_id,
+        max_steps=(req.max_steps or None), allow_write=req.allow_write,
+        allow_commands=req.allow_commands, kg=kg,
+    )
+
+
+@app.post("/agent/continue")
+async def agent_continue(req: AgentContinueRequest):
+    """Reanuda una corrida pausada, aprobando o rechazando el comando pendiente."""
+    res = await agent.continue_run(req.run_id, approve=req.approve)
+    if res.get("status") == "error":
+        raise HTTPException(404, res.get("error", "sesión no encontrada"))
+    return res
+
+
+@app.get("/agent/tools")
+async def agent_tools_list():
+    """Herramientas disponibles para el agente y su nivel de riesgo."""
+    import core.agent_tools as at
+    return {name: {"risk": s["risk"], "args": s["args"], "desc": s["desc"]}
+            for name, s in at.TOOLS.items()}
+
+
+@app.post("/recon/rollback")
+async def recon_rollback(cp_id: str = ""):
+    """Revierte al checkpoint indicado (o al último bueno si no se especifica)."""
+    target = cp_id or checkpoints.latest()
+    if not target:
+        raise HTTPException(404, "no hay checkpoints")
+    ok = checkpoints.restore(target, kg=kg)
+    if not ok:
+        raise HTTPException(404, "checkpoint no encontrado")
+    return {"status": "rolled_back", "checkpoint": target}
 
 
 @app.get("/recipes")
