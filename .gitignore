@@ -1,0 +1,27 @@
+# Secretos y configuración local — NUNCA subir
+.env
+data/local.token
+
+# Datos locales (DB con claves y conversaciones, vectores, grafo)
+data/
+*.db
+*.sqlite
+
+# Corpus de documentos del usuario (pesado y posibles derechos de autor)
+documents/
+!documents/.gitkeep
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Logs y temporales
+logs/
+*.log
+
+# Artefactos de prueba
+data/_test_semantic.db
