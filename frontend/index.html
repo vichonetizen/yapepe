@@ -965,6 +965,7 @@ async function sendMessage(){
   appendUserMsg(msg);
   let container = createAiPlaceholder();
   scrollChat();
+  startProgress();
   let finalComplexity='simple', finalModules=[], finalProvider='', finalModel='';
   _chatController = new AbortController();
   try{
@@ -999,6 +1000,7 @@ async function sendMessage(){
           }
         } else if(data.type==='text'){
           appendToProvider(container,data.provider||'',data.content);
+          updateProgress((data.content||'').length);
         } else if(data.type==='done_provider'){
           markProviderDone(container,data.provider);
         } else if(data.type==='done'){
@@ -1029,6 +1031,7 @@ async function sendMessage(){
       b.innerHTML=`<span style="color:#f87171">⚠️ Error de red: ${esc(err.message)}</span>`;
     }
   } finally {
+    finishProgress();
     _chatController=null;
     const sendBtn=document.getElementById('send-btn');
     sendBtn.textContent='Enviar ➤';
@@ -1042,6 +1045,46 @@ async function sendMessage(){
   document.getElementById('msg-input').focus();
   await loadStats();
   scrollChat();
+}
+
+// ── Barra de progreso de respuesta ───────────────────────────────────────────────
+// No se puede saber el total exacto de una respuesta en streaming, así que la barra
+// crece con el texto recibido siguiendo una curva asintótica hacia ~92% (más texto =
+// más avance, con rendimientos decrecientes) + un "goteo" suave, y salta a 100% al
+// terminar. Da una señal clara de "cuánto le falta" sin prometer un total falso.
+let _progEl=null,_progBar=null,_progPctEl=null,_progTimer=null,_progChars=0,_progPct=0,_progActive=false;
+function _ensureProgress(){
+  if(_progEl) return;
+  const st=document.createElement('style');
+  st.textContent=`
+  #chat-progress{position:fixed;top:0;left:0;right:0;height:3px;z-index:99999;opacity:0;transition:opacity .3s;pointer-events:none}
+  #chat-progress.on{opacity:1}
+  #chat-progress .pbar{height:100%;width:0;background:linear-gradient(90deg,#6366f1,#22d3ee);box-shadow:0 0 10px rgba(99,102,241,.7);transition:width .35s ease}
+  #chat-progress .ppct{position:fixed;top:7px;right:12px;font-size:.7rem;font-family:ui-monospace,monospace;color:#94a3b8;background:rgba(15,23,42,.6);padding:1px 7px;border-radius:8px;opacity:0;transition:opacity .3s}
+  #chat-progress.on .ppct{opacity:1}`;
+  document.head.appendChild(st);
+  _progEl=document.createElement('div');_progEl.id='chat-progress';
+  _progBar=document.createElement('div');_progBar.className='pbar';
+  _progPctEl=document.createElement('div');_progPctEl.className='ppct';
+  _progEl.appendChild(_progBar);_progEl.appendChild(_progPctEl);
+  document.body.appendChild(_progEl);
+}
+function _setPct(p){_progPct=p;_progBar.style.width=p.toFixed(1)+'%';_progPctEl.textContent='generando… '+Math.round(p)+'%';}
+function startProgress(){
+  _ensureProgress();_progChars=0;_progActive=true;_progEl.classList.add('on');_setPct(5);
+  clearInterval(_progTimer);
+  _progTimer=setInterval(()=>{ if(_progActive&&_progPct<90)_setPct(_progPct+(90-_progPct)*0.04); },500);
+}
+function updateProgress(chars){
+  if(!_progActive) return;
+  _progChars+=chars||0;
+  const target=5+87*(1-Math.exp(-_progChars/1400));
+  if(target>_progPct)_setPct(Math.min(92,target));
+}
+function finishProgress(){
+  if(!_progEl||!_progActive) return;
+  _progActive=false;clearInterval(_progTimer);_setPct(100);
+  setTimeout(()=>{_progEl.classList.remove('on');setTimeout(()=>{if(_progBar)_progBar.style.width='0';},350);},450);
 }
 
 // ── Message building ───────────────────────────────────────────────────────────
