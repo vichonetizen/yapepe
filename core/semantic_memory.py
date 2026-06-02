@@ -27,7 +27,8 @@ from sqlalchemy.ext.asyncio import create_async_engine
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
-_DB_PATH = "data/pentamodal.db"
+from config import DB_PATH
+_DB_PATH = DB_PATH
 _engine = None
 
 # Los modelos de embeddings tienen ventana de contexto limitada (nomic-embed-text

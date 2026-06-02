@@ -53,7 +53,7 @@ from core.recipe_store import (
 from core.autonomy import (
     ensure_indexes, consolidate_memory, status as autonomy_status,
 )
-from config import AUTONOMY_INTERVAL_HOURS
+from config import AUTONOMY_INTERVAL_HOURS, IS_VERCEL
 
 kg        = KnowledgeGraph()
 meta_ctrl = MetaController(kg)
@@ -116,8 +116,10 @@ async def lifespan(app: FastAPI):
     except Exception:
         pass
 
-    # Capa 4 — Autonomía: bucle periódico de consolidación de memoria
-    if AUTONOMY_INTERVAL_HOURS > 0:
+    # Capa 4 — Autonomía: bucle periódico de consolidación de memoria.
+    # En Vercel (serverless) no hay proceso persistente: se usa Vercel Cron contra
+    # POST /autonomy/consolidate en su lugar.
+    if AUTONOMY_INTERVAL_HOURS > 0 and not IS_VERCEL:
         asyncio.create_task(_autonomy_loop())
 
     yield

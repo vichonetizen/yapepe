@@ -12,10 +12,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy import text
 
-DOCUMENTS_DIR = Path("documents")
+from config import DB_PATH, DOCUMENTS_DIR
 
 _engine = None
-_DB_PATH = "data/pentamodal.db"
+_DB_PATH = DB_PATH
 _has_chunks: bool | None = None  # None = unknown, False = empty, True = has data
 
 

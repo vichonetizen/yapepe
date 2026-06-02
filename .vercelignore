@@ -1,0 +1,14 @@
+# No subir al bundle de la función serverless lo que no se usa en Vercel.
+# CRÍTICO: los documentos (143 MB) reventarían el límite de tamaño y no se usan
+# en el bundle (en Vercel el corpus debe venir de una DB externa, no del disco).
+documents/
+data/
+logs/
+tests/
+__pycache__/
+**/__pycache__/
+*.db
+*.sqlite
+.env
+.git/
+docs/

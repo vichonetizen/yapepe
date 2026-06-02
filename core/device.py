@@ -5,8 +5,9 @@ All filesystem paths are validated against ALLOWED_ROOTS to prevent traversal.
 import platform
 from pathlib import Path
 
-import psutil
-import pyperclip
+# psutil y pyperclip se importan de forma perezosa dentro de las funciones que los
+# usan: en entornos serverless (Vercel) pueden no estar disponibles, y así el módulo
+# se importa igual sin romper el arranque de la app.
 
 ALLOWED_ROOTS: list[Path] = [
     Path.home() / "Documents",
@@ -82,6 +83,7 @@ def read_file(path: str) -> str:
 
 
 def get_sysinfo() -> dict:
+    import psutil
     cpu = psutil.cpu_percent(interval=0.3)
     ram = psutil.virtual_memory()
 
@@ -123,10 +125,12 @@ def get_sysinfo() -> dict:
 
 def clipboard_read() -> str:
     try:
+        import pyperclip
         return pyperclip.paste() or ""
     except Exception:
         return ""
 
 
 def clipboard_write(text: str) -> None:
+    import pyperclip
     pyperclip.copy(text)
