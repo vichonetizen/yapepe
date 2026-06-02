@@ -217,6 +217,53 @@ Estás operando en modo PAC. Cada respuesta construye una base de conocimiento p
 """
 
 
+# ── Prompt LOCAL comprimido (V1) ─────────────────────────────────────────────────
+# Para modelos pequeños (1-3B) que corren en GPU de 2 GB vía Ollama. El prompt
+# Maestro completo (14 módulos × párrafo) satura su capacidad de seguir instrucciones
+# y consume contexto valioso. Esta versión prioriza EFICIENCIA: identidad mínima +
+# reglas esenciales + los datos recuperados (memoria/grafo/documentos), que es lo que
+# de verdad aporta valor. Los módulos se resumen en una sola línea, no se expanden.
+
+LOCAL_BASE_PROMPT = """Eres un asistente experto, claro y directo. Trabajas en español.
+Reglas: razona brevemente antes de responder; sé concreto; si falta un dato clave, dilo y pregunta en vez de inventar; termina con un paso siguiente accionable."""
+
+# Comportamiento clave por complejidad, en una línea (en vez de 14 párrafos de módulos)
+_LOCAL_FOCUS = {
+    "simple":   "Responde directo y breve.",
+    "media":    "Diagnostica rápido, da la mejor solución y una alternativa.",
+    "compleja": "Estructura: diagnóstico → opciones con pros/contras → recomendación → pasos → riesgos.",
+    "critica":  "Estructura completa y prioriza seguridad; declara supuestos y riesgos explícitamente.",
+}
+
+
+def build_local_system_prompt(
+    active_modules: list[str],
+    complexity: str,
+    memory_context: str = "",
+    kg_context: str = "",
+    doc_context: str = "",
+    pac_context: str = "",
+    pac_mode: bool = False,
+) -> str:
+    """System prompt compacto para inferencia local (Ollama, modelos 1-3B)."""
+    parts = [LOCAL_BASE_PROMPT, _LOCAL_FOCUS.get(complexity, _LOCAL_FOCUS["media"])]
+
+    if doc_context:
+        # Lo más valioso: el contexto recuperado. Se recorta para no saturar.
+        parts.append(
+            "\nFUENTES (úsalas como verdad y cita [📄 archivo] cuando las uses):\n"
+            + doc_context[:2500]
+        )
+    if memory_context:
+        parts.append("\nMEMORIA RELEVANTE:\n" + memory_context[:600])
+    if kg_context:
+        parts.append("\nCONCEPTOS RELACIONADOS:\n" + kg_context[:400])
+    if pac_mode and pac_context:
+        parts.append("\nAPRENDIZAJES PREVIOS:\n" + pac_context[:600])
+
+    return "\n".join(parts)
+
+
 RAG_ONLY_PROMPT = """# MODO DOCUMENTO AUTÓNOMO — SIN API KEYS EXTERNAS
 Eres un asistente de lectura e interpretación de documentos. Tu ÚNICA fuente de conocimiento son los documentos cargados en el contexto.
 

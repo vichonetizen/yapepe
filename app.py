@@ -83,7 +83,7 @@ async def lifespan(app: FastAPI):
         if ollama_info["running"]:
             existing_ollama = await get_provider_full("ollama")
             if not existing_ollama or not (existing_ollama or {}).get("api_key"):
-                model = ollama_info["models"][0] if ollama_info["models"] else "llama3.2:3b"
+                model = _pick_chat_model(ollama_info["models"]) if ollama_info["models"] else "llama3.2:3b"
                 await upsert_provider(
                     slug="ollama", name="Ollama (Local)",
                     description="Detectado automáticamente al iniciar. Sin API key ni internet.",
@@ -370,6 +370,19 @@ async def chat(req: ChatRequest, request: Request):
                     yield f"data: {json.dumps({'type':'error','content':'No hay proveedores configurados. Agrega al menos una API key en ⚙ Config.'})}\n\n"
                     return
 
+                # Capa 2 — Inferencia local: si la ruta resultó ser Ollama (modelo
+                # pequeño en GPU 2 GB), reconstruye el prompt en su versión comprimida
+                # (V1) y recorta el historial para no saturar su ventana de contexto.
+                if not req.rag_only and len(route) == 1 and route[0][0] == "ollama":
+                    from core.modules import build_local_system_prompt
+                    system_prompt = build_local_system_prompt(
+                        modules, complexity,
+                        orch.get("memory_context", ""), orch.get("kg_context", ""),
+                        orch.get("doc_context", ""), orch.get("pac_context", ""),
+                        req.pac_mode,
+                    )
+                    api_messages = api_messages[-9:]
+
                 is_parallel = (req.parallel_mode or len(route) > 1) and len(route) > 1
 
                 # ── Parallel mode ──────────────────────────────────────────────
@@ -611,6 +624,23 @@ async def set_api_key(req: ApiKeyRequest):
 
 # ── Ollama (local / sin API key) ───────────────────────────────────────────────
 
+def _pick_chat_model(models: list[str]) -> str:
+    """Elige un modelo de CHAT de la lista de Ollama, excluyendo modelos de
+    embeddings (p. ej. nomic-embed-text) que no sirven para conversar.
+    Prefiere modelos que caben bien en una GPU de 2 GB."""
+    chat = [m for m in models if "embed" not in m.lower()]
+    # Orden pensado para GPU de 2 GB: modelos ~1B primero (caben y no cuelgan el
+    # runner). Los de 2-3B se dejan como última opción (requieren más VRAM).
+    for pref in ("llama3.2:1b", "qwen2.5:1.5b", "qwen2.5:0.5b", "gemma2:2b",
+                 "phi3.5", "llama3.2:3b", "qwen2.5:3b"):
+        for m in chat:
+            if m.startswith(pref):
+                return m
+    if chat:
+        return chat[0]
+    return models[0] if models else "llama3.2:3b"
+
+
 def _check_ollama_sync() -> dict:
     import urllib.request as _ur
     import json as _json
@@ -673,7 +703,7 @@ async def ollama_register(body: dict = None):
     info = await asyncio.get_event_loop().run_in_executor(None, _check_ollama_sync)
     if not info["running"]:
         raise HTTPException(503, "Ollama no está corriendo. Inicia Ollama primero.")
-    model = (body or {}).get("model") or (info["models"][0] if info["models"] else "llama3.2:3b")
+    model = (body or {}).get("model") or _pick_chat_model(info["models"])
     result = await upsert_provider(
         slug="ollama",
         name="Ollama (Local)",

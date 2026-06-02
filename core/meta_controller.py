@@ -11,7 +11,7 @@ from core.memory import (
 from core.modules import (
     ACTIVATION_MATRIX, MAESTRO_ACTIVATION_MATRIX,
     assess_complexity, build_system_prompt, build_maestro_system_prompt,
-    build_rag_only_system_prompt, MODULE_NAMES
+    build_rag_only_system_prompt, build_local_system_prompt, MODULE_NAMES
 )
 from core.knowledge_graph import KnowledgeGraph
 from core.document_store import search_documents
@@ -112,6 +112,7 @@ class MetaController:
         pac_mode: bool = False,
         rag_only: bool = False,
         maestro_mode: bool = False,
+        local_mode: bool = False,
     ) -> dict:
         history = await get_session_history(session_id, db, limit=12)
         complexity = assess_complexity(user_input, len(history))
@@ -181,6 +182,18 @@ class MetaController:
             # In RAG-only mode, send only the current message (no history in messages list,
             # since history is embedded in the system prompt to keep context tight)
             api_messages = [{"role": "user", "content": user_input}]
+        elif local_mode:
+            # Inferencia local (Ollama 1-3B): prompt comprimido (V1) + historial corto
+            # para no saturar la ventana de contexto del modelo pequeño.
+            system_prompt = build_local_system_prompt(
+                active_modules, complexity, memory_context, kg_context,
+                doc_context, pac_context, pac_mode,
+            )
+            api_messages = [
+                {"role": m.role, "content": m.content}
+                for m in history[-8:]
+            ]
+            api_messages.append({"role": "user", "content": user_input})
         elif maestro_mode:
             system_prompt = build_maestro_system_prompt(
                 active_modules, complexity, memory_context, kg_context,
@@ -212,6 +225,13 @@ class MetaController:
             "pac_mode": pac_mode,
             "rag_only": rag_only,
             "maestro_mode": maestro_mode,
+            "local_mode": local_mode,
+            # Contextos crudos: permiten reconstruir un prompt compacto si la ruta
+            # finalmente resulta ser un modelo local (Ollama).
+            "memory_context": memory_context,
+            "kg_context": kg_context,
+            "doc_context": doc_context,
+            "pac_context": pac_context,
         }
 
     def extract_memory_facts(self, user_text: str, assistant_text: str) -> list[dict]:

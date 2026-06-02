@@ -30,6 +30,11 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 _DB_PATH = "data/pentamodal.db"
 _engine = None
 
+# Los modelos de embeddings tienen ventana de contexto limitada (nomic-embed-text
+# ≈ 2048 tokens). Chunks de >~4800 caracteres la exceden y el embed falla. Truncamos
+# a un tamaño seguro: los primeros ~3000 caracteres capturan el tema del fragmento.
+MAX_EMBED_CHARS = 3000
+
 
 def _get_engine():
     global _engine
@@ -209,9 +214,24 @@ async def index_document_chunks(batch_size: int = 16, max_batches: int = 400) ->
         if not rows:
             break
 
-        vectors = await embedder.embed([r[2] for r in rows])
+        texts = [(r[2] or "")[:MAX_EMBED_CHARS] for r in rows]
+        vectors = await embedder.embed(texts)
         if not vectors:
-            break  # backend cayó a media indexación; reintentar luego
+            # Un chunk problemático puede tumbar el lote entero. Reintentamos uno por
+            # uno (truncando más en el segundo intento) y saltamos los irrecuperables,
+            # para no frenar la indexación del resto del corpus.
+            ok_rows, vectors = [], []
+            for r in rows:
+                t = (r[2] or "")[:MAX_EMBED_CHARS]
+                v = await embedder.embed([t])
+                if not v:
+                    v = await embedder.embed([t[:1200]])
+                if v:
+                    ok_rows.append(r)
+                    vectors.append(v[0])
+            if not ok_rows:
+                break  # backend realmente caído → progreso guardado, reanudable
+            rows = ok_rows
 
         async with engine.begin() as conn:
             for (chunk_id, doc_id, _content), vec in zip(rows, vectors):
@@ -243,7 +263,7 @@ async def index_doc(doc_id: int) -> int:
         """), {"model": model, "did": doc_id})).fetchall()
     if not rows:
         return 0
-    vectors = await embedder.embed([r[2] for r in rows])
+    vectors = await embedder.embed([(r[2] or "")[:MAX_EMBED_CHARS] for r in rows])
     if not vectors:
         return 0
     async with engine.begin() as conn:
@@ -269,7 +289,7 @@ async def semantic_search_documents(query: str, top_k: int = 5) -> list[dict] | 
     if not embedder.available():
         return None
 
-    qv = await embedder.embed([query])
+    qv = await embedder.embed([query[:MAX_EMBED_CHARS]])
     if not qv:
         return None
     q = np.asarray(qv[0], dtype=np.float32)

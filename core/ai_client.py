@@ -14,6 +14,16 @@ class _RateLimitError(Exception):
     """Señal interna: proveedor devolvió 429; activa fallback automático."""
     pass
 
+
+class _LocalRunnerError(Exception):
+    """Señal interna: un modelo local (Ollama) no cabe en la GPU y el runner murió.
+    Activa fallback a un modelo más pequeño."""
+    pass
+
+
+# Modelos locales pequeños a los que recurrir si el elegido no cabe en la GPU (2 GB)
+LOCAL_FALLBACK_MODELS = ("llama3.2:1b", "qwen2.5:0.5b")
+
 # ── Routing table ──────────────────────────────────────────────────────────────
 ROUTING: dict[str, list[tuple[str, str]]] = {
     "simple":   [("groq",      "llama-3.1-8b-instant")],
@@ -157,6 +167,26 @@ class AIClient:
                         yield chunk
                     return
             yield f"\n\n⚠️ Cuota de {provider} agotada y no hay proveedor alternativo disponible.\n"
+        except _LocalRunnerError:
+            # El modelo local no cupo en la GPU → reintentar con uno más pequeño
+            cfg = self.custom_configs.get(provider, {})
+            base_url = cfg.get("base_url", "")
+            api_key = cfg.get("api_key", "ollama")
+            for small in LOCAL_FALLBACK_MODELS:
+                if small == model:
+                    continue
+                yield (f"\n\n> 🏠 *El modelo local `{model}` no cabe en la GPU — "
+                       f"reintentando con `{small}`*\n\n")
+                try:
+                    async for chunk in self._stream_openai_compat(
+                        small, system_prompt, messages, api_key, base_url
+                    ):
+                        yield chunk
+                    return
+                except _LocalRunnerError:
+                    continue
+            yield ("\n\n⚠️ Ningún modelo local cabe en la GPU disponible. "
+                   "Libera VRAM o configura un proveedor de nube.\n")
 
     async def stream_parallel(
         self,
@@ -298,4 +328,6 @@ class AIClient:
             err = str(e)
             if "429" in err or "quota" in err.lower() or "rate_limit" in err.lower():
                 raise _RateLimitError(err)
+            if "runner process has terminated" in err or "out of memory" in err.lower():
+                raise _LocalRunnerError(err)
             yield f"⚠️ Error ({model}): {e}"
