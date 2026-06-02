@@ -17,6 +17,7 @@ from core.knowledge_graph import KnowledgeGraph
 from core.document_store import search_documents
 from core.semantic_memory import hybrid_search_documents
 from core.learning_engine import search_learnings, build_pac_context
+from core.recipe_store import search_recipes, build_recipe_context
 
 
 class MetaController:
@@ -161,6 +162,17 @@ class MetaController:
             except Exception:
                 pass
 
+        # Capa 3: recetas de tareas previas aplicables a esta consulta
+        recipe_context = ""
+        recipe_ids: list[int] = []
+        try:
+            recipes = await search_recipes(user_input, top_k=2)
+            if recipes:
+                recipe_context = build_recipe_context(recipes)
+                recipe_ids = [r["id"] for r in recipes]
+        except Exception:
+            pass
+
         # Maestro mode: RL context + pattern detection
         rl_context = ""
         pattern_context = ""
@@ -187,7 +199,7 @@ class MetaController:
             # para no saturar la ventana de contexto del modelo pequeño.
             system_prompt = build_local_system_prompt(
                 active_modules, complexity, memory_context, kg_context,
-                doc_context, pac_context, pac_mode,
+                doc_context, pac_context, pac_mode, recipe_context=recipe_context,
             )
             api_messages = [
                 {"role": m.role, "content": m.content}
@@ -199,6 +211,7 @@ class MetaController:
                 active_modules, complexity, memory_context, kg_context,
                 doc_context, pac_context, pac_mode,
                 rl_context=rl_context, pattern_context=pattern_context,
+                recipe_context=recipe_context,
             )
             api_messages = [
                 {"role": m.role, "content": m.content}
@@ -208,7 +221,7 @@ class MetaController:
         else:
             system_prompt = build_system_prompt(
                 active_modules, complexity, memory_context, kg_context,
-                doc_context, pac_context, pac_mode,
+                doc_context, pac_context, pac_mode, recipe_context=recipe_context,
             )
             api_messages = [
                 {"role": m.role, "content": m.content}
@@ -232,6 +245,8 @@ class MetaController:
             "kg_context": kg_context,
             "doc_context": doc_context,
             "pac_context": pac_context,
+            "recipe_context": recipe_context,
+            "recipe_ids": recipe_ids,
         }
 
     def extract_memory_facts(self, user_text: str, assistant_text: str) -> list[dict]:

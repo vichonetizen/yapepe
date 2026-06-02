@@ -85,21 +85,35 @@ class Embedder:
         self._model = "fake-embed" if fn else ""
         self._resolved = True
 
-    def _probe_ollama(self) -> bool:
+    # Modelos de embeddings de Ollama, mejor → peor (bge-m3 es multilingüe y rinde
+    # mucho mejor en español que nomic-embed-text, que es sobre todo inglés).
+    _OLLAMA_EMBED_PREF = ("bge-m3", "nomic-embed-text", "mxbai-embed-large", "all-minilm")
+
+    def _probe_ollama_models(self) -> list[str] | None:
         try:
             with urllib.request.urlopen(self._ollama_url + "/api/tags", timeout=2) as r:
-                _json.loads(r.read())
-                return True
+                data = _json.loads(r.read())
+                return [m["name"] for m in data.get("models", [])]
         except Exception:
-            return False
+            return None
+
+    def _pick_ollama_embed_model(self, models: list[str]) -> str | None:
+        for pref in self._OLLAMA_EMBED_PREF:
+            for m in models:
+                if m.startswith(pref):
+                    return m
+        return None
 
     async def resolve(self):
         if self._resolved:
             return
         # Preferencia local-first: Ollama cubre el objetivo "GPU 2 GB sin internet".
-        ollama_ok = await asyncio.get_event_loop().run_in_executor(None, self._probe_ollama)
-        if ollama_ok:
-            self._backend, self._model = "ollama", "nomic-embed-text"
+        # Solo usamos Ollama para embeddings si hay un modelo de embeddings instalado;
+        # si no, preferimos la nube antes de degradar a BM25.
+        models = await asyncio.get_event_loop().run_in_executor(None, self._probe_ollama_models)
+        ollama_embed = self._pick_ollama_embed_model(models) if models else None
+        if ollama_embed:
+            self._backend, self._model = "ollama", ollama_embed
         elif self._keys.get("openai"):
             self._backend, self._model = "openai", "text-embedding-3-small"
         elif self._keys.get("google"):

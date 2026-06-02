@@ -244,6 +244,7 @@ def build_local_system_prompt(
     doc_context: str = "",
     pac_context: str = "",
     pac_mode: bool = False,
+    recipe_context: str = "",
 ) -> str:
     """System prompt compacto para inferencia local (Ollama, modelos 1-3B)."""
     parts = [LOCAL_BASE_PROMPT, _LOCAL_FOCUS.get(complexity, _LOCAL_FOCUS["media"])]
@@ -260,6 +261,8 @@ def build_local_system_prompt(
         parts.append("\nCONCEPTOS RELACIONADOS:\n" + kg_context[:400])
     if pac_mode and pac_context:
         parts.append("\nAPRENDIZAJES PREVIOS:\n" + pac_context[:600])
+    if recipe_context:
+        parts.append("\nRECETA QUE FUNCIONÓ ANTES (replica el enfoque):\n" + recipe_context[:800])
 
     return "\n".join(parts)
 
@@ -294,6 +297,7 @@ def build_maestro_system_prompt(
     pac_mode: bool = False,
     rl_context: str = "",
     pattern_context: str = "",
+    recipe_context: str = "",
 ) -> str:
     """Build system prompt for Maestro Mode (INSTRUCCIÓN MAESTRA v2.0)."""
     parts = [MAESTRO_BASE_PROMPT]
@@ -327,6 +331,9 @@ def build_maestro_system_prompt(
         parts.append(
             f"\n---\n## APRENDIZAJES ACUMULADOS DE CONVERSACIONES PREVIAS\n{pac_context}"
         )
+
+    if recipe_context:
+        parts.append(f"\n---\n## RECETAS DE TAREAS APLICABLES (Capa 3)\n{recipe_context}")
 
     if pac_mode:
         parts.append(PAC_ADDON)
@@ -387,6 +394,7 @@ def build_system_prompt(
     doc_context: str = "",
     pac_context: str = "",
     pac_mode: bool = False,
+    recipe_context: str = "",
 ) -> str:
     parts = [BASE_PENTAMODAL_PROMPT]
 
@@ -414,6 +422,9 @@ def build_system_prompt(
             f"\n---\n## APRENDIZAJES ACUMULADOS DE CONVERSACIONES PREVIAS\n"
             f"(Recuperados por relevancia — úsalos como contexto adicional)\n\n{pac_context}"
         )
+
+    if recipe_context:
+        parts.append(f"\n---\n## RECETAS DE TAREAS APLICABLES (Capa 3)\n{recipe_context}")
 
     if pac_mode:
         parts.append(PAC_ADDON)

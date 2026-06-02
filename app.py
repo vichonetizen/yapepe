@@ -46,6 +46,10 @@ from core.semantic_memory import (
     init_semantic_db, embedder, index_document_chunks, index_doc,
     maybe_autoindex_on_start, status as semantic_status,
 )
+from core.recipe_store import (
+    init_recipes_db, maybe_capture_recipe, mark_reused,
+    get_all_recipes, delete_recipe, get_recipe_stats,
+)
 
 kg        = KnowledgeGraph()
 meta_ctrl = MetaController(kg)
@@ -60,6 +64,7 @@ async def lifespan(app: FastAPI):
     await load_keys_into_client(ai_client)
     await init_learnings_db()
     await init_semantic_db()
+    await init_recipes_db()
 
     # Sync .env keys → DB (only if DB slot is empty)
     from config import GOOGLE_API_KEY, GROQ_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY
@@ -352,6 +357,10 @@ async def chat(req: ChatRequest, request: Request):
                 complexity    = orch["complexity"]
                 modules       = orch["modules"]
 
+                # Capa 3: si se aplicaron recetas previas, cuéntalas como reutilizadas
+                if orch.get("recipe_ids"):
+                    asyncio.create_task(mark_reused(orch["recipe_ids"]))
+
                 # Determine provider route
                 if req.override_provider and req.override_provider in ai_client.keys:
                     route = [(req.override_provider,
@@ -379,7 +388,7 @@ async def chat(req: ChatRequest, request: Request):
                         modules, complexity,
                         orch.get("memory_context", ""), orch.get("kg_context", ""),
                         orch.get("doc_context", ""), orch.get("pac_context", ""),
-                        req.pac_mode,
+                        req.pac_mode, recipe_context=orch.get("recipe_context", ""),
                     )
                     api_messages = api_messages[-9:]
 
@@ -468,6 +477,27 @@ async def submit_feedback(req: FeedbackRequest, db: AsyncSession = Depends(get_d
     await update_message_rating(req.message_id, req.rating, db)
     if req.complexity and req.modules:
         await update_module_performance(req.complexity, req.modules, req.rating, db, req.provider)
+
+    # Capa 3: si la respuesta fue bien calificada en una tarea con sustancia,
+    # captura una receta (pedido + enfoque que funcionó) para replicarla luego.
+    if req.rating >= 4.0 and req.complexity in ("media", "compleja", "critica"):
+        amsg = (await db.execute(
+            select(Message).where(Message.id == req.message_id)
+        )).scalar_one_or_none()
+        if amsg and amsg.role == "assistant":
+            umsg = (await db.execute(
+                select(Message)
+                .where(Message.session_id == amsg.session_id,
+                       Message.role == "user",
+                       Message.created_at <= amsg.created_at)
+                .order_by(Message.created_at.desc())
+                .limit(1)
+            )).scalar_one_or_none()
+            if umsg:
+                asyncio.create_task(maybe_capture_recipe(
+                    amsg.session_id, umsg.content, amsg.content,
+                    req.complexity, req.rating,
+                ))
     return {"status": "ok"}
 
 
@@ -566,6 +596,25 @@ async def documents_stats():
 async def semantic_status_endpoint():
     """Estado del backend de embeddings y progreso de indexación."""
     return await semantic_status()
+
+
+@app.get("/recipes")
+async def list_recipes():
+    """Recetas de tareas aprendidas (Capa 3)."""
+    return await get_all_recipes()
+
+
+@app.get("/recipes/stats")
+async def recipes_stats():
+    return await get_recipe_stats()
+
+
+@app.delete("/recipes/{rid}")
+async def remove_recipe(rid: int):
+    ok = await delete_recipe(rid)
+    if not ok:
+        raise HTTPException(404, "Receta no encontrada")
+    return {"status": "deleted", "id": rid}
 
 
 @app.post("/semantic/reindex")
