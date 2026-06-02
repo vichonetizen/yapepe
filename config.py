@@ -17,3 +17,5 @@ DATABASE_URL      = f"sqlite+aiosqlite:///{DATA_DIR}/pentamodal.db"
 KG_FILE           = str(DATA_DIR / "knowledge_graph.json")
 PORT              = int(os.getenv("PORT", "8000"))
 HOST              = os.getenv("HOST", "127.0.0.1")
+# Capa 4 — Autonomía: cada cuántas horas consolidar la memoria (0 = desactivado)
+AUTONOMY_INTERVAL_HOURS = float(os.getenv("AUTONOMY_INTERVAL_HOURS", "6"))

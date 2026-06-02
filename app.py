@@ -50,6 +50,10 @@ from core.recipe_store import (
     init_recipes_db, maybe_capture_recipe, mark_reused,
     get_all_recipes, delete_recipe, get_recipe_stats,
 )
+from core.autonomy import (
+    ensure_indexes, consolidate_memory, status as autonomy_status,
+)
+from config import AUTONOMY_INTERVAL_HOURS
 
 kg        = KnowledgeGraph()
 meta_ctrl = MetaController(kg)
@@ -65,6 +69,7 @@ async def lifespan(app: FastAPI):
     await init_learnings_db()
     await init_semantic_db()
     await init_recipes_db()
+    await ensure_indexes()
 
     # Sync .env keys → DB (only if DB slot is empty)
     from config import GOOGLE_API_KEY, GROQ_API_KEY, OPENAI_API_KEY, ANTHROPIC_API_KEY
@@ -111,7 +116,22 @@ async def lifespan(app: FastAPI):
     except Exception:
         pass
 
+    # Capa 4 — Autonomía: bucle periódico de consolidación de memoria
+    if AUTONOMY_INTERVAL_HOURS > 0:
+        asyncio.create_task(_autonomy_loop())
+
     yield
+
+
+async def _autonomy_loop():
+    """Consolida la memoria cada AUTONOMY_INTERVAL_HOURS horas, en segundo plano."""
+    interval = AUTONOMY_INTERVAL_HOURS * 3600
+    while True:
+        await asyncio.sleep(interval)
+        try:
+            await consolidate_memory(kg)
+        except Exception:
+            pass
 
 
 app = FastAPI(title="Pentamodal 3.0 — Multi-Provider", lifespan=lifespan)
@@ -596,6 +616,19 @@ async def documents_stats():
 async def semantic_status_endpoint():
     """Estado del backend de embeddings y progreso de indexación."""
     return await semantic_status()
+
+
+@app.get("/autonomy/status")
+async def autonomy_status_endpoint():
+    """Estado del último ciclo de consolidación autónoma (Capa 4)."""
+    return {"interval_hours": AUTONOMY_INTERVAL_HOURS, **autonomy_status()}
+
+
+@app.post("/autonomy/consolidate")
+async def autonomy_consolidate():
+    """Dispara una consolidación de memoria a mano (fusiona, poda, indexa pendientes)."""
+    report = await consolidate_memory(kg)
+    return {"status": "ok", "report": report}
 
 
 @app.get("/recipes")
