@@ -152,7 +152,8 @@ class _TokenMiddleware(BaseHTTPMiddleware):
     """Require X-Local-Token header on every request except the HTML page and CORS preflights."""
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
-        if request.method == "OPTIONS" or (request.method == "GET" and path == "/"):
+        if (request.method == "OPTIONS"
+                or (request.method == "GET" and path in ("/", "/api/health"))):
             return await call_next(request)
         token = request.headers.get("X-Local-Token", "")
         if not verify_token(token):
@@ -213,9 +214,31 @@ class ProviderConfigRequest(BaseModel):
 
 # ── Static ─────────────────────────────────────────────────────────────────────
 
+@app.get("/api/health")
+async def health():
+    """Diagnóstico: confirma que la función vive y qué proveedores hay (sin token)."""
+    return {
+        "ok": True,
+        "is_vercel": IS_VERCEL,
+        "providers": ai_client.available_providers(),
+        "data_dir": str(getattr(__import__("config"), "DATA_DIR", "")),
+    }
+
+
 @app.get("/", response_class=HTMLResponse)
 async def serve_ui():
-    html = (Path(__file__).parent / "frontend" / "index.html").read_text(encoding="utf-8")
+    try:
+        html = (Path(__file__).parent / "frontend" / "index.html").read_text(encoding="utf-8")
+    except Exception as e:
+        return HTMLResponse(
+            "<html><body style='font-family:sans-serif;padding:2rem'>"
+            "<h1>Pentamodal</h1>"
+            "<p>✅ La aplicación está corriendo, pero no se pudo cargar la interfaz "
+            f"(<code>frontend/index.html</code>).</p><p>Detalle: {e}</p>"
+            "<p>Prueba <a href='/api/health'>/api/health</a> para verificar el estado.</p>"
+            "</body></html>",
+            status_code=200,
+        )
     token = get_token()
     # Patch window.fetch to auto-include the local auth token on every API call
     inject = (

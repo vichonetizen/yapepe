@@ -1,12 +1,12 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "builds": [
-    { "src": "api/index.py", "use": "@vercel/python" }
-  ],
-  "routes": [
-    { "src": "/(.*)", "dest": "api/index.py" }
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/api/index" }
   ],
   "functions": {
-    "api/index.py": { "maxDuration": 60 }
+    "api/index.py": {
+      "maxDuration": 60,
+      "includeFiles": "frontend/**"
+    }
   }
 }
