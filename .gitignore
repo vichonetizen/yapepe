@@ -25,3 +25,6 @@ logs/
 
 # Artefactos de prueba
 data/_test_semantic.db
+
+# Salida regenerable de graphify (grafo de conocimiento)
+graphify-out/

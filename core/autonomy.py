@@ -17,6 +17,9 @@ from datetime import datetime
 
 from sqlalchemy import text
 
+import sys, os
+sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
+from config import RECON_ENABLED
 from core.semantic_memory import _get_engine, index_document_chunks
 
 # Estado del último ciclo (para /autonomy/status)
@@ -109,8 +112,13 @@ async def consolidate_memory(kg=None) -> dict:
     except Exception:
         report["chunks_indexed"] = 0
 
-    # Mantener el grafo de conocimiento
-    if kg is not None:
+    # Mantener el grafo de conocimiento — SOLO si la Capa 5 (auto-reconstrucción)
+    # NO está activa. Cuando lo está, ella es la dueña segura del grafo: poda y
+    # limpia bajo un oráculo fijo con checkpoint/rollback (core/self_reconstruction).
+    # Que la Capa 4 también podara aquí, a ciegas, duplicaría el trabajo en cada
+    # ciclo y saltaría esa red de seguridad. Si la Capa 5 está apagada, la Capa 4
+    # conserva la poda básica para que el grafo no crezca sin límite.
+    if kg is not None and not RECON_ENABLED:
         try:
             kg._prune_if_needed()
             kg.save()
