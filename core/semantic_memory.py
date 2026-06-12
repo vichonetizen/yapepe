@@ -66,8 +66,10 @@ class Embedder:
         self._backend: str | None = None   # 'ollama' | 'openai' | 'google' | None
         self._model = ""
         self._resolved = False
+        self._last_probe = 0.0   # tiempo (monotónico) del último intento de resolución
         # Inyectable en pruebas: callable(list[str]) -> list[list[float]] | None
         self._fake = None
+        self._pinned = False     # True si un test fijó el backend con set_fake_embedder
 
     def configure(self, keys: dict, ollama_url: str = ""):
         """Llamar al iniciar la app con las claves cargadas en AIClient."""
@@ -78,6 +80,7 @@ class Embedder:
                 base = base[:-3]
             self._ollama_url = base
         self._resolved = False  # forzar re-resolución con la nueva config
+        self._pinned = False
 
     def set_fake_embedder(self, fn):
         """Solo pruebas: inyecta un embebedor determinista."""
@@ -85,6 +88,7 @@ class Embedder:
         self._backend = "fake" if fn else None
         self._model = "fake-embed" if fn else ""
         self._resolved = True
+        self._pinned = True   # estado fijado: resolve() no debe re-sondear
 
     # Modelos de embeddings de Ollama, mejor → peor (bge-m3 es multilingüe y rinde
     # mucho mejor en español que nomic-embed-text, que es sobre todo inglés).
@@ -99,15 +103,28 @@ class Embedder:
             return None
 
     def _pick_ollama_embed_model(self, models: list[str]) -> str | None:
+        # Coincidencia precisa: "bge-m3" o "bge-m3:latest", pero no un nombre que solo
+        # empiece igual (evita elegir por error un modelo que no sea de embeddings).
         for pref in self._OLLAMA_EMBED_PREF:
             for m in models:
-                if m.startswith(pref):
+                if m == pref or m.startswith(pref + ":"):
                     return m
         return None
 
     async def resolve(self):
-        if self._resolved:
+        # Estado fijado explícitamente (p.ej. en pruebas con set_fake_embedder): respetar
+        # tal cual, sin re-sondear backends.
+        if self._pinned:
             return
+        # Si ya hay un backend disponible, queda fijado (cambiarlo requiere configure()).
+        if self._resolved and self._backend is not None:
+            return
+        # Si NO hay backend, reintentar: Ollama pudo arrancar DESPUÉS de la app. Se
+        # limita el sondeo a una vez cada 30 s para no penalizar cada búsqueda.
+        now = asyncio.get_event_loop().time()
+        if self._resolved and self._backend is None and (now - self._last_probe) < 30.0:
+            return
+        self._last_probe = now
         # Preferencia local-first: Ollama cubre el objetivo "GPU 2 GB sin internet".
         # Solo usamos Ollama para embeddings si hay un modelo de embeddings instalado;
         # si no, preferimos la nube antes de degradar a BM25.

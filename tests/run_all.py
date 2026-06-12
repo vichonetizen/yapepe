@@ -80,12 +80,16 @@ CHECKS = [
     ("7. Capa 6 — Bucle agente",                  "tests/test_agent.py"),
     ("8. Estado de la base de conocimiento",      "state"),
     ("9. Consulta semántica real (español)",      "query"),
+    ("10. Seguridad — sandbox /device",           "tests/test_device_security.py"),
+    ("11. Seguridad — token local",               "tests/test_auth_token.py"),
+    ("12. Ruteo de proveedores",                  "tests/test_routing.py"),
+    ("13. Knowledge graph",                       "tests/test_knowledge_graph.py"),
 ]
 
 
 async def main():
     print("=" * 64)
-    print("  PENTAMODAL — LAS 9 PRUEBAS")
+    print(f"  PENTAMODAL — LAS {len(CHECKS)} PRUEBAS")
     print("=" * 64)
     passed = 0
     for label, kind in CHECKS:

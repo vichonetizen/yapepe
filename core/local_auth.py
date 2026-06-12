@@ -22,8 +22,11 @@ def get_token() -> str:
     # garantiza que la página servida y la validación usen el mismo token.
     env_token = os.getenv("LOCAL_TOKEN", "").strip()
     if env_token:
-        _token = env_token
-        return _token
+        # Exigir un mínimo de entropía: un LOCAL_TOKEN corto en un despliegue público
+        # sería trivial de adivinar. Si es débil, se ignora y se genera uno fuerte.
+        if len(env_token) >= 32:
+            _token = env_token
+            return _token
     if _TOKEN_FILE.exists():
         candidate = _TOKEN_FILE.read_text().strip()
         if len(candidate) == 64:

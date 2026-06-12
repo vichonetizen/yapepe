@@ -28,6 +28,15 @@ DATABASE_URL      = os.getenv("DATABASE_URL", f"sqlite+aiosqlite:///{DB_PATH}")
 KG_FILE           = str(DATA_DIR / "knowledge_graph.json")
 PORT              = int(os.getenv("PORT", "8000"))
 HOST              = os.getenv("HOST", "127.0.0.1")
+
+# ── Seguridad: ¿despliegue local de confianza? ──────────────────────────────────
+# Solo en local (loopback y fuera de Vercel) se exponen capacidades sensibles: los
+# endpoints /device/* (FS, sysinfo, portapapeles) y el token embebido en la página
+# servida en "/". En cualquier host remoto/serverless quedan DESACTIVADAS.
+IS_LOCAL = (not IS_VERCEL) and (HOST in ("127.0.0.1", "localhost", "::1"))
+DEVICE_ACCESS_ENABLED = IS_LOCAL and (
+    os.getenv("DISABLE_DEVICE_ACCESS", "0") not in ("1", "true", "True")
+)
 # Capa 4 — Autonomía: cada cuántas horas consolidar la memoria (0 = desactivado)
 AUTONOMY_INTERVAL_HOURS = float(os.getenv("AUTONOMY_INTERVAL_HOURS", "6"))
 

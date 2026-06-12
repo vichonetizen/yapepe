@@ -58,7 +58,8 @@ import core.checkpoints as checkpoints
 import core.associations as associations
 import core.agent as agent
 from config import (
-    AUTONOMY_INTERVAL_HOURS, IS_VERCEL, RECON_ENABLED, RECON_MODE, RECON_MAX_CYCLES,
+    AUTONOMY_INTERVAL_HOURS, IS_VERCEL, IS_LOCAL, DEVICE_ACCESS_ENABLED,
+    RECON_ENABLED, RECON_MODE, RECON_MAX_CYCLES,
 )
 
 kg        = KnowledgeGraph()
@@ -169,6 +170,12 @@ class _TokenMiddleware(BaseHTTPMiddleware):
     """Require X-Local-Token header on every request except the HTML page and CORS preflights."""
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
+        # Capacidades de dispositivo: desactivadas fuera de un despliegue local de confianza.
+        if path.startswith("/device/") and not DEVICE_ACCESS_ENABLED:
+            return JSONResponse(
+                {"detail": "Acceso a dispositivo deshabilitado en este entorno."},
+                status_code=404,
+            )
         if (request.method == "OPTIONS"
                 or (request.method == "GET" and path in ("/", "/api/health"))):
             return await call_next(request)
@@ -256,20 +263,24 @@ async def serve_ui():
             "</body></html>",
             status_code=200,
         )
-    token = get_token()
-    # Patch window.fetch to auto-include the local auth token on every API call
-    inject = (
-        "<script>(function(){"
-        "var T='" + token + "';"
-        "var _f=window.fetch.bind(window);"
-        "window.fetch=function(u,o){"
-        "o=o||{};"
-        "var loc=typeof u==='string'&&(u.startsWith('/')||u.startsWith('http://127.0.0.1')||u.startsWith('http://localhost'));"
-        "if(loc){o.headers=Object.assign({'X-Local-Token':T},o.headers||{});}"
-        "return _f(u,o);};"
-        "})();</script>"
-    )
-    html = html.replace("<head>", "<head>" + inject, 1)
+    # El token solo se embebe en la página en un despliegue LOCAL de confianza. En
+    # remoto/serverless NO se inyecta, para que un visitante anónimo no pueda leerlo
+    # del HTML y usar la API. (Un despliegue público requeriría autenticación real.)
+    if IS_LOCAL:
+        token = get_token()
+        # Patch window.fetch to auto-include the local auth token on every API call
+        inject = (
+            "<script>(function(){"
+            "var T='" + token + "';"
+            "var _f=window.fetch.bind(window);"
+            "window.fetch=function(u,o){"
+            "o=o||{};"
+            "var loc=typeof u==='string'&&(u.startsWith('/')||u.startsWith('http://127.0.0.1')||u.startsWith('http://localhost'));"
+            "if(loc){o.headers=Object.assign({'X-Local-Token':T},o.headers||{});}"
+            "return _f(u,o);};"
+            "})();</script>"
+        )
+        html = html.replace("<head>", "<head>" + inject, 1)
     return HTMLResponse(html)
 
 
@@ -817,6 +828,10 @@ async def get_provider_config(slug: str):
     p = await get_provider_full(slug)
     if not p:
         raise HTTPException(404, "Proveedor no encontrado")
+    # Fuera de un despliegue local, no devolver la API key en texto plano.
+    if not IS_LOCAL:
+        key = p.get("api_key") or ""
+        p["api_key"] = ("•" * min(12, max(0, len(key) - 4)) + key[-4:]) if len(key) > 4 else ""
     return p
 
 

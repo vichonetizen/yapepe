@@ -23,9 +23,22 @@ MAX_READ_BYTES = 500_000  # 500 KB
 _TEXT_EXTENSIONS = {
     ".txt", ".md", ".py", ".js", ".ts", ".jsx", ".tsx",
     ".json", ".csv", ".html", ".css", ".yaml", ".yml",
-    ".toml", ".log", ".xml", ".ini", ".cfg", ".env",
+    ".toml", ".log", ".xml", ".ini", ".cfg",
     ".sh", ".bat", ".ps1", ".rs", ".go", ".java", ".c", ".cpp",
 }
+
+
+# Archivos sensibles: nunca se listan como legibles ni se devuelven por read_file,
+# aunque caigan dentro de una carpeta autorizada (defensa en profundidad).
+def _is_secret(p: Path) -> bool:
+    name = p.name.lower()
+    return (
+        name == ".env" or name.startswith(".env.")
+        or name.endswith(".token") or name.endswith(".pem")
+        or name.endswith(".key") or name.endswith(".pfx") or name.endswith(".kdbx")
+        or name in ("id_rsa", "id_ed25519", ".npmrc", ".pypirc")
+        or "secret" in name or "credential" in name or "password" in name
+    )
 
 
 def _resolve_safe(path: str) -> Path:
@@ -63,7 +76,7 @@ def list_path(path: str) -> dict:
                 "type": "dir" if child.is_dir() else "file",
                 "size": s.st_size if child.is_file() else None,
                 "ext": child.suffix.lower() if child.is_file() else None,
-                "readable": child.suffix.lower() in _TEXT_EXTENSIONS if child.is_file() else None,
+                "readable": (child.suffix.lower() in _TEXT_EXTENSIONS and not _is_secret(child)) if child.is_file() else None,
             })
         except (PermissionError, OSError):
             continue
@@ -72,6 +85,8 @@ def list_path(path: str) -> dict:
 
 def read_file(path: str) -> str:
     p = _resolve_safe(path)
+    if _is_secret(p):
+        raise PermissionError("Lectura de archivos sensibles (claves/secretos) bloqueada.")
     if not p.is_file():
         raise ValueError("La ruta no es un archivo.")
     if p.suffix.lower() not in _TEXT_EXTENSIONS:
