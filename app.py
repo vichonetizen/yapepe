@@ -58,7 +58,7 @@ import core.checkpoints as checkpoints
 import core.associations as associations
 import core.agent as agent
 from config import (
-    AUTONOMY_INTERVAL_HOURS, IS_VERCEL, IS_LOCAL, DEVICE_ACCESS_ENABLED,
+    AUTONOMY_INTERVAL_HOURS, IS_VERCEL, DEVICE_ACCESS_ENABLED, es_cliente_local,
     RECON_ENABLED, RECON_MODE, RECON_MAX_CYCLES,
 )
 
@@ -166,12 +166,18 @@ app.add_middleware(
 )
 
 
+def _peticion_local(request: Request) -> bool:
+    """Confianza por petición: el CLIENTE conecta desde loopback (no el bind del servidor)."""
+    return es_cliente_local(request.client.host if request.client else None)
+
+
 class _TokenMiddleware(BaseHTTPMiddleware):
     """Require X-Local-Token header on every request except the HTML page and CORS preflights."""
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
-        # Capacidades de dispositivo: desactivadas fuera de un despliegue local de confianza.
-        if path.startswith("/device/") and not DEVICE_ACCESS_ENABLED:
+        # Capacidades de dispositivo: solo para clientes en loopback (y si no se
+        # apagaron por DISABLE_DEVICE_ACCESS). Además exigen token más abajo.
+        if path.startswith("/device/") and not (DEVICE_ACCESS_ENABLED and _peticion_local(request)):
             return JSONResponse(
                 {"detail": "Acceso a dispositivo deshabilitado en este entorno."},
                 status_code=404,
@@ -239,8 +245,12 @@ class ProviderConfigRequest(BaseModel):
 # ── Static ─────────────────────────────────────────────────────────────────────
 
 @app.get("/api/health")
-async def health():
-    """Diagnóstico: confirma que la función vive y qué proveedores hay (sin token)."""
+async def health(request: Request):
+    """Diagnóstico sin token. Fuera de un cliente local solo confirma que la app
+    vive: la ruta de datos (con nombre de usuario) y la lista de proveedores
+    configurados no se exponen a peticiones remotas/anónimas."""
+    if not _peticion_local(request):
+        return {"ok": True}
     return {
         "ok": True,
         "is_vercel": IS_VERCEL,
@@ -250,7 +260,7 @@ async def health():
 
 
 @app.get("/", response_class=HTMLResponse)
-async def serve_ui():
+async def serve_ui(request: Request):
     try:
         html = (Path(__file__).parent / "frontend" / "index.html").read_text(encoding="utf-8")
     except Exception as e:
@@ -263,10 +273,10 @@ async def serve_ui():
             "</body></html>",
             status_code=200,
         )
-    # El token solo se embebe en la página en un despliegue LOCAL de confianza. En
-    # remoto/serverless NO se inyecta, para que un visitante anónimo no pueda leerlo
+    # El token solo se embebe si la PETICIÓN viene de loopback. A clientes remotos
+    # o serverless NO se les inyecta, para que un visitante anónimo no pueda leerlo
     # del HTML y usar la API. (Un despliegue público requeriría autenticación real.)
-    if IS_LOCAL:
+    if _peticion_local(request):
         token = get_token()
         # Patch window.fetch to auto-include the local auth token on every API call
         inject = (
@@ -824,12 +834,12 @@ async def list_provider_configs():
 
 
 @app.get("/provider-configs/{slug}")
-async def get_provider_config(slug: str):
+async def get_provider_config(slug: str, request: Request):
     p = await get_provider_full(slug)
     if not p:
         raise HTTPException(404, "Proveedor no encontrado")
-    # Fuera de un despliegue local, no devolver la API key en texto plano.
-    if not IS_LOCAL:
+    # A clientes no-loopback, no devolver la API key en texto plano.
+    if not _peticion_local(request):
         key = p.get("api_key") or ""
         p["api_key"] = ("•" * min(12, max(0, len(key) - 4)) + key[-4:]) if len(key) > 4 else ""
     return p

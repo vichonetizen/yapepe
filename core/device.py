@@ -3,6 +3,7 @@ Device access module — filesystem browse/read, system info, clipboard.
 All filesystem paths are validated against ALLOWED_ROOTS to prevent traversal.
 """
 import platform
+import re
 from pathlib import Path
 
 # psutil y pyperclip se importan de forma perezosa dentro de las funciones que los
@@ -30,15 +31,37 @@ _TEXT_EXTENSIONS = {
 
 # Archivos sensibles: nunca se listan como legibles ni se devuelven por read_file,
 # aunque caigan dentro de una carpeta autorizada (defensa en profundidad).
+#
+# Criterio de detección (dos niveles, para equilibrar cobertura y falsos positivos):
+#  - SUBSTRING para términos de alta señal: palabras que casi nunca aparecen en un
+#    archivo inocente ("secret", "contraseña", "credencial", "adminsdk"...). Cubren
+#    también sus plurales/derivados ("secretos", "credenciales") por contención.
+#  - PALABRA COMPLETA para términos ambiguos ("key", "token", "clave"...): solo
+#    cuentan si aparecen como palabra separada por . _ - o espacios en el nombre.
+#    Así "token.json" o "claves_wifi.txt" se bloquean, pero archivos legítimos
+#    como "tokenizer.py", "monkey.py", "keyboard.md" o "clavel.jpg" no.
+_SECRET_NAMES = {"id_rsa", "id_ed25519", ".npmrc", ".pypirc", ".netrc", ".htpasswd"}
+_SECRET_SUFFIXES = (".token", ".pem", ".key", ".pfx", ".kdbx", ".p12", ".ppk")
+_SECRET_SUBSTRINGS = (
+    "secret", "secreto",
+    "credential", "credencial",
+    "password", "passwd", "contraseña", "contrasena",
+    "apikey", "privatekey",
+    "serviceaccount", "service-account", "service_account", "adminsdk",
+)
+_SECRET_WORDS = {"key", "keys", "token", "tokens", "clave", "claves", "pwd"}
+
+
 def _is_secret(p: Path) -> bool:
     name = p.name.lower()
-    return (
-        name == ".env" or name.startswith(".env.")
-        or name.endswith(".token") or name.endswith(".pem")
-        or name.endswith(".key") or name.endswith(".pfx") or name.endswith(".kdbx")
-        or name in ("id_rsa", "id_ed25519", ".npmrc", ".pypirc")
-        or "secret" in name or "credential" in name or "password" in name
-    )
+    if name == ".env" or name.startswith(".env."):
+        return True
+    if name in _SECRET_NAMES or name.endswith(_SECRET_SUFFIXES):
+        return True
+    if any(s in name for s in _SECRET_SUBSTRINGS):
+        return True
+    palabras = re.split(r"[^a-z0-9áéíóúüñ]+", name)
+    return any(w in _SECRET_WORDS for w in palabras)
 
 
 def _resolve_safe(path: str) -> Path:

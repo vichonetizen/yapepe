@@ -29,12 +29,25 @@ KG_FILE           = str(DATA_DIR / "knowledge_graph.json")
 PORT              = int(os.getenv("PORT", "8000"))
 HOST              = os.getenv("HOST", "127.0.0.1")
 
-# ── Seguridad: ¿despliegue local de confianza? ──────────────────────────────────
-# Solo en local (loopback y fuera de Vercel) se exponen capacidades sensibles: los
-# endpoints /device/* (FS, sysinfo, portapapeles) y el token embebido en la página
-# servida en "/". En cualquier host remoto/serverless quedan DESACTIVADAS.
-IS_LOCAL = (not IS_VERCEL) and (HOST in ("127.0.0.1", "localhost", "::1"))
-DEVICE_ACCESS_ENABLED = IS_LOCAL and (
+# ── Seguridad: ¿petición local de confianza? ────────────────────────────────────
+# La confianza se decide POR PETICIÓN con es_cliente_local(), mirando desde dónde
+# conecta el cliente (request.client.host en loopback) — no la dirección de BIND
+# del servidor. Antes se usaba un IS_LOCAL global calculado con HOST, lo que con
+# HOST=0.0.0.0 (escuchar en la LAN) mataba la UI con 403 silenciosos incluso desde
+# 127.0.0.1. Ahora una petición desde loopback siempre es de confianza (token en
+# la página, /device/*, diagnóstico completo) y una remota nunca lo es. En Vercel
+# (serverless detrás de proxy) nada es de confianza, sea cual sea la IP aparente.
+_LOOPBACK_CLIENTS = ("127.0.0.1", "::1", "::ffff:127.0.0.1", "localhost")
+
+
+def es_cliente_local(client_host: str | None) -> bool:
+    """True si la petición proviene de loopback y no corremos en serverless."""
+    return (not IS_VERCEL) and (client_host in _LOOPBACK_CLIENTS)
+
+
+# Interruptor de arranque (no decide confianza): permite apagar /device/* del todo.
+# La confianza por petición (cliente en loopback) se comprueba aparte en app.py.
+DEVICE_ACCESS_ENABLED = (not IS_VERCEL) and (
     os.getenv("DISABLE_DEVICE_ACCESS", "0") not in ("1", "true", "True")
 )
 # Capa 4 — Autonomía: cada cuántas horas consolidar la memoria (0 = desactivado)

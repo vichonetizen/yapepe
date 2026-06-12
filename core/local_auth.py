@@ -2,6 +2,7 @@
 Local-only auth token. Generated once, stored in data/local.token.
 Injected into the served HTML so the frontend can include it on every request.
 """
+import logging
 import os
 import secrets
 import sys
@@ -9,6 +10,8 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from config import DATA_DIR
+
+logger = logging.getLogger("pentamodal.local_auth")
 
 _TOKEN_FILE = DATA_DIR / "local.token"
 _token: str | None = None
@@ -27,6 +30,14 @@ def get_token() -> str:
         if len(env_token) >= 32:
             _token = env_token
             return _token
+        # Avisar (no silenciar): quien configuró ese token verá 403 en todas sus
+        # peticiones y este warning es la única pista del porqué.
+        logger.warning(
+            "LOCAL_TOKEN de entorno descartado: tiene %d caracteres y el mínimo es 32. "
+            "Se usará/generará un token fuerte en su lugar, así que las peticiones "
+            "firmadas con ese LOCAL_TOKEN corto recibirán 403.",
+            len(env_token),
+        )
     if _TOKEN_FILE.exists():
         candidate = _TOKEN_FILE.read_text().strip()
         if len(candidate) == 64:
