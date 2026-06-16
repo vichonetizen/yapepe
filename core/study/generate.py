@@ -123,3 +123,22 @@ def generate(req: StudyRequest,
         if len(emitted) >= max_questions:
             break
     return emitted
+
+
+async def agenerate(req: StudyRequest, chunks: list[Chunk],
+                    max_questions: int = 10) -> list[Question]:
+    """Genera con LLM (ai_client) si hay proveedor; si no, cae a la ruta offline.
+    El gate de la regla dura se aplica igual en ambos caminos."""
+    from . import llm  # import diferido: evita coste si no se usa
+    raw = await llm.agenerate_questions(req, chunks, n=max_questions)
+    allowed = {c.chunk_id for c in chunks}
+    emitted: list[Question] = []
+    for d in raw:
+        q = _coerce_question(d)
+        if q and is_grounded(q) and all(str(e) in allowed for e in q.evidence):
+            emitted.append(q)
+            if len(emitted) >= max_questions:
+                break
+    if emitted:
+        return emitted
+    return generate(req, chunks, llm=None, max_questions=max_questions)

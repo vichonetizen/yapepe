@@ -105,7 +105,7 @@ async def study_generate_endpoint(body: StudyRequestIn):
     if not chunks:
         raise HTTPException(status_code=404,
                             detail="No hay chunks para ese corpus. ¿Documento indexado?")
-    questions = study_generate.generate(req, chunks, max_questions=body.n)
+    questions = await study_generate.agenerate(req, chunks, max_questions=body.n)
     return {"focus_mode": mode, "num_questions": len(questions),
             "questions": [_q_dict(q) for q in questions]}
 

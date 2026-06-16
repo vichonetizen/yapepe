@@ -28,7 +28,7 @@ async def start_session(req: StudyRequest,
                         llm: Optional[Callable] = None,
                         n: int = 5) -> dict:
     chunks, mode = await _focus.retrieve(req)
-    questions = _generate.generate(req, chunks, llm=llm, max_questions=n)
+    questions = await _generate.agenerate(req, chunks, max_questions=n)
     sid = str(uuid.uuid4())
     _SESSIONS[sid] = {
         "questions": {q.q_id: q for q in questions},
@@ -68,7 +68,7 @@ async def submit_answer(session_id: str,
     question = sess["questions"].get(q_id)
     if question is None:
         raise KeyError(f"Pregunta desconocida en la sesión: {q_id}")
-    result = _grade.grade(question, answer, llm=llm)
+    result = await _grade.agrade(question, answer)
     await _persist_result(session_id, result)
     return result
 

@@ -105,3 +105,22 @@ def grade(question: Question,
     )
     assert_grounded(result)
     return result
+
+
+async def agrade(question: Question, user_answer: str) -> GradeResult:
+    """Califica usando LLM para abiertas si hay proveedor; si no, determinista.
+    La evidencia siempre se hereda de la pregunta anclada."""
+    if question.type == QuestionType.OPEN:
+        from . import llm  # import diferido
+        res = await llm.agrade_open(question, user_answer)
+        if res is not None:
+            score = res["score"]
+            gaps = list(question.concept_ids) if score < 0.6 else []
+            result = GradeResult(
+                q_id=question.q_id, user_answer=user_answer, score=score,
+                verdict=_verdict(score), feedback=res["feedback"] or question.rationale,
+                evidence=list(question.evidence), gaps=gaps,
+            )
+            assert_grounded(result)
+            return result
+    return grade(question, user_answer)
