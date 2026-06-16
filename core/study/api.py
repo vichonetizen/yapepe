@@ -15,9 +15,11 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
-from . import store, session as study_session, focus as study_focus, generate as study_generate
+from . import (store, session as study_session, focus as study_focus,
+               generate as study_generate, extract as study_extract)
 from .models import StudyRequest, Focus, Question, GradeResult
 from .grounding import UngroundedError, resolve_evidence
+from .concept_graph import ConceptGraph
 
 router = APIRouter(prefix="/study", tags=["estudia"])
 
@@ -52,6 +54,10 @@ class AnswerIn(BaseModel):
     session_id: str
     q_id: str
     answer: str
+
+
+class ExtractIn(BaseModel):
+    corpus_ids: list[str]
 
 
 def _to_request(body: StudyRequestIn) -> StudyRequest:
@@ -130,3 +136,32 @@ async def study_cite(chunk_ids: list[str]):
     except UngroundedError as e:
         raise HTTPException(status_code=422, detail=str(e))
     return {"citations": [asdict(c) for c in cites]}
+
+
+# --------------------------------------------------------------------------- #
+# Ola 1 — Comprensión: conceptos y grafo
+# --------------------------------------------------------------------------- #
+@router.post("/extract")
+async def study_extract_endpoint(body: ExtractIn):
+    """Extrae conceptos/aristas anclados del corpus y construye el grafo."""
+    await store.ensure_migrated()
+    return await study_extract.extract_corpus(body.corpus_ids)
+
+
+@router.get("/conceptmap")
+async def study_conceptmap(max_edges: int = 60):
+    """Mapa conceptual (Mermaid) fiel al grafo de conceptos."""
+    await store.ensure_migrated()
+    g = ConceptGraph.load()
+    return {"render": "mermaid", "mermaid": g.to_mermaid(max_edges),
+            "num_nodes": len(g.nodes), "num_edges": len(g.edges)}
+
+
+@router.get("/hierarchy")
+async def study_hierarchy(root: str, max_levels: int = 5):
+    """Jerarquía BFS de conceptos desde un concepto raíz."""
+    await store.ensure_migrated()
+    g = ConceptGraph.load()
+    levels = g.bfs_levels(root, max_levels=max_levels)
+    return {"root": root, "num_levels": len(levels),
+            "levels": [[g.label_of(k) for k in lvl] for lvl in levels]}

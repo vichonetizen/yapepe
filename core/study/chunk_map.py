@@ -61,6 +61,24 @@ async def get_chunks_for_docs(doc_ids: list[str], limit: int = 2000) -> list[Chu
         return [_row_to_chunk(r) for r in res.fetchall()]
 
 
+async def get_chunks_by_ids(chunk_ids: list[str]) -> list[Chunk]:
+    """Chunks por id (preserva el orden de entrada; omite ids inexistentes)."""
+    int_ids = _to_int_ids(chunk_ids)
+    if not int_ids:
+        return []
+    ph = ",".join(f":i{i}" for i in range(len(int_ids)))
+    params = {f"i{i}": v for i, v in enumerate(int_ids)}
+    engine = get_engine()
+    async with engine.connect() as conn:
+        res = await conn.execute(
+            text(f"SELECT id, doc_id, content, page, section_path "
+                 f"FROM document_chunks WHERE id IN ({ph})"),
+            params,
+        )
+        by_id = {r[0]: _row_to_chunk(r) for r in res.fetchall()}
+    return [by_id[i] for i in int_ids if i in by_id]
+
+
 async def get_chunk(chunk_id: str) -> Chunk | None:
     try:
         cid = int(chunk_id)

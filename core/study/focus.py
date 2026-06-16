@@ -30,10 +30,17 @@ async def retrieve(req: StudyRequest, top_k: int = 12) -> tuple[list[Chunk], str
         return await chunk_map.get_chunks_for_docs(req.corpus_ids), "all (topic sin tema)"
 
     if req.focus in _NEEDS_GRAPH:
+        # Ola 1: si hay conceptos clave, selecciona los chunks que los anclan (grafo).
+        if req.key_concepts:
+            from . import extract  # import diferido: evita ciclo focus<->extract
+            chunk_ids = await extract.chunks_for_concepts(req.key_concepts)
+            chunks = await chunk_map.get_chunks_by_ids(chunk_ids)
+            if chunks:
+                return chunks, f"{req.focus.value} vía grafo ({len(req.key_concepts)} conceptos clave)"
         if req.topic:
             chunks = await chunk_map.topic_chunks(req.corpus_ids, req.topic, top_k)
-            return chunks, f"{req.focus.value}→topic (grafo pendiente, Ola 1)"
+            return chunks, f"{req.focus.value}→topic (sin conceptos clave)"
         chunks = await chunk_map.get_chunks_for_docs(req.corpus_ids)
-        return chunks, f"{req.focus.value}→all (grafo pendiente, Ola 1)"
+        return chunks, f"{req.focus.value}→all (sin conceptos clave ni tema)"
 
     return await chunk_map.get_chunks_for_docs(req.corpus_ids), "all"

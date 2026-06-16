@@ -75,9 +75,10 @@ async def _run() -> bool:
                   all("autopoi" in c.text.lower() for c in chunks_topic),
                   "focus TOPIC filtra a chunks del tema")
 
-    # COMPARE degrada honestamente (grafo pendiente)
+    # COMPARE sin conceptos clave degrada honestamente a topic (con aviso)
     _, mode_cmp = await focus.retrieve(StudyRequest(corpus_ids=[doc_id], focus=Focus.COMPARE, topic="conocer"))
-    passed &= _ok("grafo pendiente" in mode_cmp, "COMPARE degrada con aviso (grafo pendiente Ola 1)")
+    passed &= _ok("compare" in mode_cmp and ("topic" in mode_cmp or "sin conceptos" in mode_cmp),
+                  f"COMPARE sin conceptos clave degrada con aviso (modo: {mode_cmp})")
 
     # 2. generación anclada ----------------------------------------------------
     qs = generate.generate(req_all, chunks_all, max_questions=6)
