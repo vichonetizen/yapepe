@@ -28,13 +28,15 @@ from config import DB_PATH  # noqa: E402
 # en pruebas (mismo patrón que semantic_memory).
 _db_path: str = DB_PATH
 _engine = None
+_migrated: bool = False
 
 
 def use_db(path: str) -> None:
     """Solo para pruebas: redirige el almacenamiento a otra DB y resetea el motor."""
-    global _db_path, _engine
+    global _db_path, _engine, _migrated
     _db_path = path
     _engine = None
+    _migrated = False
 
 
 def get_engine():
@@ -181,6 +183,14 @@ async def migrate() -> dict:
             summary["study_tables_ensured"].append(name)
 
     return summary
+
+
+async def ensure_migrated() -> None:
+    """Corre migrate() una sola vez por proceso (idempotente de todos modos)."""
+    global _migrated
+    if not _migrated:
+        await migrate()
+        _migrated = True
 
 
 async def healthcheck() -> dict:

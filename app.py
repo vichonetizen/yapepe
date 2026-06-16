@@ -166,6 +166,17 @@ app.add_middleware(
 )
 
 
+# ── EstudIA — motor de estudio (paquete core/study) ──────────────────────────────
+# Aditivo: expone /study/* sin tocar los endpoints existentes. La regla dura del
+# proyecto (degradación elegante) aplica: si el módulo no carga, la app sigue viva.
+try:
+    from core.study.api import router as estudia_router
+    app.include_router(estudia_router)
+except Exception as _estudia_err:  # noqa: BLE001
+    import logging
+    logging.getLogger("pentamodal").warning("EstudIA no disponible: %s", _estudia_err)
+
+
 def _peticion_local(request: Request) -> bool:
     """Confianza por petición: el CLIENTE conecta desde loopback (no el bind del servidor)."""
     return es_cliente_local(request.client.host if request.client else None)
