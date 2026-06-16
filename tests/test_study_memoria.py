@@ -25,7 +25,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sqlalchemy import text  # noqa: E402
 
 from core.study import store, extract, fsrs, panel, plan, exam, concept_graph  # noqa: E402
+from core.study import llm as _llm  # noqa: E402
 from core.study.models import Card  # noqa: E402
+
+_llm.provider_available = lambda: False  # test determinista: fuerza ruta offline
 
 _NOW = datetime(2026, 6, 15, tzinfo=timezone.utc)
 _CHUNKS = [

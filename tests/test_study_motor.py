@@ -24,7 +24,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sqlalchemy import text  # noqa: E402
 
 from core.study import store, focus, generate, grade, session, grounding  # noqa: E402
+from core.study import llm as _llm  # noqa: E402
 from core.study.models import StudyRequest, Focus  # noqa: E402
+
+_llm.provider_available = lambda: False  # test determinista: fuerza ruta offline
 
 
 def _ok(cond: bool, msg: str) -> bool:

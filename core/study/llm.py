@@ -13,16 +13,65 @@ entregado (anti-alucinación de citas), y la validación final la hace grounding
 from __future__ import annotations
 
 import json
+import os
 import re
 from typing import Optional
 
 from core.ai_client import AIClient
 
 _client = AIClient()
+_ollama_checked = False
+
+
+def _pick_chat_model(models: list[str]) -> str:
+    """Elige un modelo de CHAT de Ollama apto para GPU de 2 GB (igual que app.py)."""
+    chat = [m for m in models if "embed" not in m.lower() and "bge" not in m.lower()
+            and "nomic" not in m.lower()]
+    for pref in ("llama3.2:1b", "qwen2.5:1.5b", "qwen2.5:0.5b", "gemma2:2b",
+                 "phi3.5", "llama3.2:3b", "qwen2.5:3b"):
+        for m in chat:
+            if m.startswith(pref):
+                return m
+    return chat[0] if chat else (models[0] if models else "llama3.2:3b")
+
+
+def _ensure_ollama() -> None:
+    """Auto-detecta y registra Ollama local (sin API key) una vez por proceso."""
+    global _ollama_checked
+    if _ollama_checked or "ollama" in _client.keys:
+        _ollama_checked = True
+        return
+    _ollama_checked = True
+    try:
+        import json as _json
+        import urllib.request as _ur
+        with _ur.urlopen("http://localhost:11434/api/tags", timeout=2) as r:
+            models = [m["name"] for m in _json.loads(r.read()).get("models", [])]
+        if not models:
+            return
+        model = _pick_chat_model(models)
+        _client.update_key("ollama", "ollama")
+        _client.register_custom("ollama", "ollama", "http://localhost:11434/v1", model)
+    except Exception:
+        pass
+
+
+def current_provider() -> Optional[tuple[str, str]]:
+    """Devuelve (proveedor, modelo) que se usaría, o None si no hay ninguno."""
+    _ensure_ollama()
+    route = _client.get_route("media")
+    return route[0] if route else None
 
 
 def provider_available() -> bool:
-    """True si hay algún proveedor (nube u Ollama local) disponible."""
+    """True si hay un proveedor utilizable. Controlable con ESTUDIA_LLM:
+      - "off"/"0"/"false": nunca usa LLM (solo plantillas offline; cero latencia).
+      - "auto" (def.): usa LLM si hay proveedor (nube u Ollama local).
+    En GPU pequeña el modelo local puede ser débil/lento: poner "off" evita el
+    intento inútil y va directo a la ruta determinista."""
+    if os.getenv("ESTUDIA_LLM", "auto").strip().lower() in ("0", "off", "false", "no"):
+        return False
+    _ensure_ollama()
     try:
         return bool(_client.get_route("media"))
     except Exception:

@@ -29,9 +29,11 @@ from core import document_store  # extract_text/_chunk_text son sin estado  # no
 
 
 def ocr_backend() -> str | None:
-    """Nombre del backend de OCR disponible, o None. Requiere OCR + renderizador."""
+    """Nombre del backend de OCR disponible, o None. Requiere el MOTOR tesseract
+    (no solo el wrapper) + un renderizador (pdf2image/fitz)."""
     try:
-        import pytesseract  # noqa: F401
+        import pytesseract
+        pytesseract.get_tesseract_version()   # verifica que el binario exista de verdad
     except Exception:
         return None
     for renderer in ("pdf2image", "fitz"):
