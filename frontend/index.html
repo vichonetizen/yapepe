@@ -643,6 +643,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
         </div>
         <div id="est-docs"><p style="color:var(--muted);font-size:.8rem;">Cargando documentos…</p></div>
         <div style="display:flex;flex-wrap:wrap;gap:7px;margin:11px 0;">
+          <button class="est-btn" onclick="estudiaPrepare()">📥 Preparar (OCR + páginas)</button>
           <button class="est-btn" onclick="estudiaExtract()">🧩 Extraer conceptos</button>
           <button class="est-btn" onclick="estudiaSession()">📝 Iniciar sesión</button>
           <button class="est-btn" onclick="estudiaPanel()">📊 Panel de dominio</button>
@@ -1285,6 +1286,7 @@ async function rate(val){
 // ── EstudIA (estudio anclado a la fuente) ────────────────────────────────────
 let EST = {session:null, questions:[], qi:0, exam:null};
 function estSelectedDocs(){ return Array.from(document.querySelectorAll('.est-doc:checked')).map(c=>c.value); }
+function estSelectedFilenames(){ return Array.from(document.querySelectorAll('.est-doc:checked')).map(c=>c.getAttribute('data-fn')); }
 function estStatus(msg,color){ const e=document.getElementById('est-status'); if(e){ e.style.color=color||'var(--muted)'; e.innerHTML=msg; } }
 function estArea(html){ document.getElementById('est-area').innerHTML=html; }
 async function estPost(path,body){ const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})}); const d=await r.json(); if(!r.ok) throw new Error(d.detail||('HTTP '+r.status)); return d; }
@@ -1298,9 +1300,25 @@ async function loadEstudia(){
     if(!docs.length){ el.innerHTML='<p style="color:var(--muted);font-size:.8rem;">Sube documentos en la pestaña 📄 Documentos primero.</p>'; return; }
     el.innerHTML='<div style="font-size:.76rem;font-weight:600;margin-bottom:6px;">Documentos a estudiar:</div>'+
       docs.map(d=>`<label style="display:flex;gap:7px;align-items:center;font-size:.78rem;padding:3px 0;cursor:pointer;">
-        <input type="checkbox" class="est-doc" value="${d.id}"> ${esc(d.filename)}
+        <input type="checkbox" class="est-doc" value="${d.id}" data-fn="${esc(d.filename)}"> ${esc(d.filename)}
         <span style="color:var(--muted);">(${d.chunk_count} frag.)</span></label>`).join('');
   }catch(e){ document.getElementById('est-docs').innerHTML='<p style="color:#f87171;font-size:.8rem;">Error al cargar documentos.</p>'; }
+}
+
+async function estudiaPrepare(){
+  const fns=estSelectedFilenames(); if(!fns.length){ estStatus('⚠️ Marca al menos un documento.','#f59e0b'); return; }
+  estStatus('📥 Preparando con páginas/OCR (los escaneados pueden tardar varios minutos)…');
+  let ok=0; const info=[];
+  for(const fn of fns){
+    try{ const d=await estPost('/study/ingest',{filename:fn}); ok++;
+      info.push(`${fn.slice(0,34)} → ${d.chunks} frag · ${d.pages_with_text??'?'} pág. texto · ${d.pages_needing_ocr||0} OCR`);
+    }catch(e){ info.push(`${fn.slice(0,34)} → ✗ ${e.message}`); }
+  }
+  estStatus(`✓ ${ok}/${fns.length} preparados (con páginas/OCR).`,'#6ee7b7');
+  estArea('<div class="est-card"><div style="font-weight:600;margin-bottom:6px;">Preparación con páginas/OCR</div>'+
+    info.map(x=>`<div style="font-size:.76rem;">${esc(x)}</div>`).join('')+
+    '<div style="font-size:.72rem;color:var(--muted);margin-top:6px;">Re-cargué la lista; marca el documento recién preparado para estudiarlo con citas a página.</div></div>');
+  await loadEstudia();
 }
 
 async function estudiaExtract(){
