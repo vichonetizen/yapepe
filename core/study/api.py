@@ -19,7 +19,7 @@ from . import (store, session as study_session, focus as study_focus,
                generate as study_generate, extract as study_extract,
                structures as study_structures, ingest_bridge as study_ingest,
                fsrs as study_fsrs, plan as study_plan, panel as study_panel,
-               exam as study_exam)
+               exam as study_exam, adaptive as study_adaptive)
 from .models import StudyRequest, Focus, Question, GradeResult
 from .grounding import UngroundedError, resolve_evidence
 from .concept_graph import ConceptGraph
@@ -100,6 +100,10 @@ class ExamSubmitIn(BaseModel):
 
 class PanelIn(BaseModel):
     corpus_ids: list[str]
+
+
+class MasteryIn(BaseModel):
+    corpus_ids: list[str] = []
 
 
 def _to_request(body: StudyRequestIn) -> StudyRequest:
@@ -300,3 +304,13 @@ async def study_exam_submit(body: ExamSubmitIn):
         raise HTTPException(status_code=404, detail=str(e))
     return {**{k: v for k, v in res.items() if k != "results"},
             "results": [_gr_dict(g) for g in res["results"]]}
+
+
+# --------------------------------------------------------------------------- #
+# Ola 5 — Aprendizaje adaptativo
+# --------------------------------------------------------------------------- #
+@router.post("/mastery")
+async def study_mastery(body: MasteryIn):
+    """Recalcula dominio: clustering de errores + ajuste de dificultad + reordena el plan."""
+    await store.ensure_migrated()
+    return await study_adaptive.reorder(body.corpus_ids or None)
