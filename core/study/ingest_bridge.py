@@ -14,8 +14,10 @@ dormido sin romper nada. 100% offline / local-first.
 
 from __future__ import annotations
 
+import glob
 import io
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -28,40 +30,84 @@ from .store import get_engine, ensure_migrated  # noqa: E402
 from core import document_store  # extract_text/_chunk_text son sin estado  # noqa: E402
 
 
-def ocr_backend() -> str | None:
-    """Nombre del backend de OCR disponible, o None. Requiere el MOTOR tesseract
-    (no solo el wrapper) + un renderizador (pdf2image/fitz)."""
-    try:
-        import pytesseract
-        pytesseract.get_tesseract_version()   # verifica que el binario exista de verdad
-    except Exception:
-        return None
-    for renderer in ("pdf2image", "fitz"):
-        try:
-            __import__(renderer)
-            return f"pytesseract+{renderer}"
-        except Exception:
-            continue
+def _find_tesseract() -> str | None:
+    p = shutil.which("tesseract")
+    if p:
+        return p
+    for c in (r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+              r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"):
+        if os.path.exists(c):
+            return c
     return None
 
 
-def _ocr_page(data: bytes, page_no: int) -> str:
-    """OCR de una página (best-effort). Devuelve '' si no hay backend."""
+def _find_poppler() -> str | None:
+    pat = os.path.join(os.path.expanduser("~"), "AppData", "Local", "Microsoft",
+                       "WinGet", "Packages", "oschwartz10612.Poppler*",
+                       "poppler-*", "Library", "bin")
+    for d in glob.glob(pat):
+        if os.path.exists(os.path.join(d, "pdftoppm.exe")):
+            return d
+    if shutil.which("pdftoppm"):
+        return os.path.dirname(shutil.which("pdftoppm"))
+    return None
+
+
+def _find_tessdata() -> str | None:
+    """Carpeta tessdata de usuario con idiomas extra (p. ej. spa) si existe."""
+    cand = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))),
+                        "data", "tessdata")
+    if os.path.exists(os.path.join(cand, "spa.traineddata")):
+        return cand
+    return None
+
+
+_TESS = _find_tesseract()
+_POPPLER = _find_poppler()
+_TESSDATA = _find_tessdata()
+
+
+def ocr_backend() -> str | None:
+    """Nombre del backend de OCR disponible, o None. Requiere el MOTOR tesseract
+    (no solo el wrapper) + pdf2image (con Poppler)."""
+    if not _TESS:
+        return None
     try:
         import pytesseract
+        pytesseract.pytesseract.tesseract_cmd = _TESS
+        pytesseract.get_tesseract_version()
+    except Exception:
+        return None
+    try:
+        import pdf2image  # noqa: F401
+    except Exception:
+        return None
+    return f"tesseract@{os.path.basename(os.path.dirname(_TESS))}+poppler"
+
+
+def _ocr_lang() -> str:
+    """Idiomas para OCR: español+inglés si el spa está disponible, si no inglés."""
+    return "spa+eng" if _TESSDATA else "eng"
+
+
+def _ocr_page(data: bytes, page_no: int) -> str:
+    """OCR de una página (best-effort). Devuelve '' si no hay backend/falla."""
+    try:
+        import pytesseract
+        from pdf2image import convert_from_bytes
+        if _TESS:
+            pytesseract.pytesseract.tesseract_cmd = _TESS
+        kw = {"first_page": page_no, "last_page": page_no, "dpi": 200}
+        if _POPPLER:
+            kw["poppler_path"] = _POPPLER
+        imgs = convert_from_bytes(data, **kw)
+        if not imgs:
+            return ""
+        config = f'--tessdata-dir "{_TESSDATA}"' if _TESSDATA else ""
         try:
-            from pdf2image import convert_from_bytes
-            imgs = convert_from_bytes(data, first_page=page_no, last_page=page_no)
-            if not imgs:
-                return ""
-            return pytesseract.image_to_string(imgs[0], lang="spa+eng") or ""
+            return pytesseract.image_to_string(imgs[0], lang=_ocr_lang(), config=config) or ""
         except Exception:
-            import fitz  # PyMuPDF
-            from PIL import Image
-            doc = fitz.open(stream=data, filetype="pdf")
-            pix = doc[page_no - 1].get_pixmap(dpi=200)
-            img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
-            return pytesseract.image_to_string(img, lang="spa+eng") or ""
+            return pytesseract.image_to_string(imgs[0]) or ""   # fallback eng/default
     except Exception:
         return ""
 

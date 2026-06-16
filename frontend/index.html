@@ -312,6 +312,7 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
   <button class="tab-btn" onclick="showTab('memory',this)">🧠 Memoria</button>
   <button class="tab-btn" onclick="showTab('kg',this)">🕸 Grafo</button>
   <button class="tab-btn" onclick="showTab('stats',this)">📊 Estadísticas</button>
+  <button class="tab-btn" onclick="showTab('estudia',this)">🎓 Estudio</button>
 </div>
 
 <!-- Offline banner -->
@@ -623,6 +624,36 @@ body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,san
     </div>
 
     <!-- Stats -->
+    <!-- EstudIA -->
+    <div id="panel-estudia" class="panel" style="flex-direction:column;">
+      <style>
+        .est-btn{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:6px 11px;color:var(--text);font-size:.74rem;cursor:pointer;}
+        .est-btn:hover{border-color:#6366f1;}
+        .est-card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:11px;margin:9px 0;font-size:.82rem;line-height:1.55;}
+        .est-cite{color:var(--muted);font-size:.72rem;margin-top:7px;border-left:2px solid #6366f1;padding-left:8px;}
+        .est-in{width:100%;box-sizing:border-box;background:var(--bg,#111);border:1px solid var(--border);border-radius:6px;padding:7px;color:var(--text);font-size:.82rem;margin-top:6px;}
+      </style>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <span style="font-size:0.82rem;font-weight:600;">🎓 EstudIA — estudio anclado a la fuente</span>
+        <button class="est-btn" onclick="loadEstudia()">↻ Actualizar</button>
+      </div>
+      <div class="scroll-panel">
+        <div style="font-size:.78rem;color:var(--muted);margin-bottom:9px;">
+          Marca documento(s), prepáralos (extraer conceptos) y estudia: preguntas, calificación con cita, mapa, panel de dominio y examen. Toda pregunta y corrección va anclada a la fuente — sin evidencia, no se emite.
+        </div>
+        <div id="est-docs"><p style="color:var(--muted);font-size:.8rem;">Cargando documentos…</p></div>
+        <div style="display:flex;flex-wrap:wrap;gap:7px;margin:11px 0;">
+          <button class="est-btn" onclick="estudiaExtract()">🧩 Extraer conceptos</button>
+          <button class="est-btn" onclick="estudiaSession()">📝 Iniciar sesión</button>
+          <button class="est-btn" onclick="estudiaPanel()">📊 Panel de dominio</button>
+          <button class="est-btn" onclick="estudiaMap()">🕸 Mapa conceptual</button>
+          <button class="est-btn" onclick="estudiaExam()">🏁 Examen</button>
+        </div>
+        <div id="est-status" style="font-size:.78rem;margin:7px 0;min-height:1em;"></div>
+        <div id="est-area"></div>
+      </div>
+    </div>
+
     <div id="panel-stats" class="panel">
       <div class="scroll-panel" id="stats-content"><p style="color:var(--muted);font-size:0.8rem;">Cargando...</p></div>
     </div>
@@ -1251,6 +1282,132 @@ async function rate(val){
 }
 
 // ── Tabs ───────────────────────────────────────────────────────────────────────
+// ── EstudIA (estudio anclado a la fuente) ────────────────────────────────────
+let EST = {session:null, questions:[], qi:0, exam:null};
+function estSelectedDocs(){ return Array.from(document.querySelectorAll('.est-doc:checked')).map(c=>c.value); }
+function estStatus(msg,color){ const e=document.getElementById('est-status'); if(e){ e.style.color=color||'var(--muted)'; e.innerHTML=msg; } }
+function estArea(html){ document.getElementById('est-area').innerHTML=html; }
+async function estPost(path,body){ const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})}); const d=await r.json(); if(!r.ok) throw new Error(d.detail||('HTTP '+r.status)); return d; }
+async function estGet(path){ const r=await fetch(path); const d=await r.json(); if(!r.ok) throw new Error(d.detail||('HTTP '+r.status)); return d; }
+function estNeedDocs(){ const ids=estSelectedDocs(); if(!ids.length) estStatus('⚠️ Marca al menos un documento.','#f59e0b'); return ids; }
+
+async function loadEstudia(){
+  try{
+    const docs=await estGet('/documents');
+    const el=document.getElementById('est-docs');
+    if(!docs.length){ el.innerHTML='<p style="color:var(--muted);font-size:.8rem;">Sube documentos en la pestaña 📄 Documentos primero.</p>'; return; }
+    el.innerHTML='<div style="font-size:.76rem;font-weight:600;margin-bottom:6px;">Documentos a estudiar:</div>'+
+      docs.map(d=>`<label style="display:flex;gap:7px;align-items:center;font-size:.78rem;padding:3px 0;cursor:pointer;">
+        <input type="checkbox" class="est-doc" value="${d.id}"> ${esc(d.filename)}
+        <span style="color:var(--muted);">(${d.chunk_count} frag.)</span></label>`).join('');
+  }catch(e){ document.getElementById('est-docs').innerHTML='<p style="color:#f87171;font-size:.8rem;">Error al cargar documentos.</p>'; }
+}
+
+async function estudiaExtract(){
+  const ids=estNeedDocs(); if(!ids.length) return;
+  estStatus('🧩 Extrayendo conceptos y construyendo el grafo…');
+  try{ const d=await estPost('/study/extract',{corpus_ids:ids});
+    estStatus(`✓ ${d.concepts} conceptos · ${d.edges} relaciones · ${d.chunks} fragmentos.`,'#6ee7b7');
+  }catch(e){ estStatus('✗ '+e.message,'#f87171'); }
+}
+
+async function estudiaSession(){
+  const ids=estNeedDocs(); if(!ids.length) return;
+  estStatus('📝 Generando preguntas ancladas…');
+  try{ const d=await estPost('/study/session',{corpus_ids:ids,focus:'all',n:5});
+    EST.session=d.session_id; EST.questions=d.questions||[]; EST.qi=0;
+    if(!EST.questions.length){ estStatus('No se generaron preguntas (¿hay texto en el doc?).','#f59e0b'); estArea(''); return; }
+    estStatus(`Sesión iniciada · ${d.num_questions} preguntas · modo ${d.focus_mode}.`,'#6ee7b7');
+    estRenderQuestion();
+  }catch(e){ estStatus('✗ '+e.message,'#f87171'); }
+}
+
+function estRenderQuestion(){
+  const q=EST.questions[EST.qi];
+  if(!q){ estArea('<div class="est-card">✅ Sesión completada. Revisa el Panel de dominio.</div>'); return; }
+  let input;
+  if(q.type==='mcq' && q.options){ input=q.options.map(o=>`<label style="display:block;font-size:.82rem;padding:3px 0;"><input type="radio" name="est-ans" value="${esc(o)}"> ${esc(o)}</label>`).join(''); }
+  else { input=`<input class="est-in" id="est-ans" placeholder="Tu respuesta…">`; }
+  estArea(`<div class="est-card">
+    <div style="color:var(--muted);font-size:.72rem;">Pregunta ${EST.qi+1}/${EST.questions.length} · ${q.type} · dificultad ${q.difficulty}</div>
+    <div style="font-weight:600;margin:6px 0;">${esc(q.prompt)}</div>
+    ${input}
+    <div style="margin-top:9px;"><button class="est-btn" onclick="estudiaAnswer()">Responder</button></div>
+    <div id="est-grade"></div></div>`);
+}
+
+function estGetAnswer(){
+  const radio=document.querySelector('input[name="est-ans"]:checked'); if(radio) return radio.value;
+  const inp=document.getElementById('est-ans'); return inp?inp.value:'';
+}
+
+async function estudiaAnswer(){
+  const q=EST.questions[EST.qi]; if(!q) return;
+  try{ const gr=await estPost('/study/grade',{session_id:EST.session,q_id:q.q_id,answer:estGetAnswer()});
+    let cites=[]; try{ const c=await estPost('/study/cite',gr.evidence); cites=c.citations||[]; }catch(_){}
+    const color=gr.score>=0.85?'#6ee7b7':gr.score>=0.5?'#fbbf24':'#f87171';
+    const citeHtml=cites.map(c=>`<div class="est-cite">${esc(c.filename)}${c.page?(' · pág. '+c.page):''} — «${esc((c.quote||'').slice(0,160))}»</div>`).join('');
+    document.getElementById('est-grade').innerHTML=`<div style="margin-top:10px;border-top:1px solid var(--border);padding-top:9px;">
+      <div style="color:${color};font-weight:600;">${esc(gr.verdict)} · ${(gr.score*100).toFixed(0)}%</div>
+      <div style="font-size:.8rem;margin:4px 0;">${esc(gr.feedback)}</div>
+      ${gr.gaps&&gr.gaps.length?`<div style="font-size:.74rem;color:var(--muted);">A reforzar: ${gr.gaps.map(esc).join(', ')}</div>`:''}
+      ${citeHtml}
+      <div style="margin-top:9px;"><button class="est-btn" onclick="estNext()">Siguiente →</button></div></div>`;
+  }catch(e){ estStatus('✗ '+e.message,'#f87171'); }
+}
+function estNext(){ EST.qi++; estRenderQuestion(); }
+
+async function estudiaPanel(){
+  const ids=estNeedDocs(); if(!ids.length) return;
+  estStatus('📊 Preparando tarjetas y calculando dominio…');
+  try{ await estPost('/study/cards/ensure',{corpus_ids:ids});
+    const d=await estPost('/study/panel',{corpus_ids:ids});
+    estStatus('');
+    estArea(`<div class="est-card">
+      <div style="font-weight:600;margin-bottom:6px;">Panel de dominio</div>
+      <div>Conceptos: <strong>${d.total_concepts}</strong> · Tarjetas: ${d.cards} · Dominados: <strong>${d.mastered}</strong></div>
+      <div>Dominio: <strong>${(d.mastery_pct*100).toFixed(0)}%</strong> · Repasos hoy: ${d.due_today}</div>
+      <div style="margin-top:6px;color:${d.ready_for_exam?'#6ee7b7':'#fbbf24'};font-weight:600;">
+        ${d.ready_for_exam?'✅ Listo para prueba (≥85%)':'⏳ Aún no listo (objetivo ≥85%)'}</div>
+      <div style="font-size:.72rem;color:var(--muted);margin-top:6px;">El dominio sube tras ≥2 aciertos espaciados por concepto.</div></div>`);
+  }catch(e){ estStatus('✗ '+e.message,'#f87171'); }
+}
+
+async function estudiaMap(){
+  estStatus('🕸 Generando mapa…');
+  try{ const d=await estGet('/study/conceptmap');
+    estStatus(`Mapa: ${d.num_nodes} nodos · ${d.num_edges} relaciones.`,'#6ee7b7');
+    estArea(`<div class="est-card"><div style="font-weight:600;margin-bottom:6px;">Mapa conceptual (Mermaid)</div>
+      <pre style="white-space:pre-wrap;font-size:.72rem;background:#0b0b0b;padding:9px;border-radius:6px;overflow:auto;max-height:340px;">${esc(d.mermaid)}</pre>
+      <div style="font-size:.72rem;color:var(--muted);">Pega este texto en mermaid.live para verlo como diagrama.</div></div>`);
+  }catch(e){ estStatus('✗ '+e.message,'#f87171'); }
+}
+
+async function estudiaExam(){
+  const ids=estNeedDocs(); if(!ids.length) return;
+  estStatus('🏁 Preparando examen…');
+  try{ const d=await estPost('/study/exam/start',{corpus_ids:ids,coverage_target:0.5,n:6});
+    EST.exam=d.exam_id;
+    if(!d.questions.length){ estStatus('No se generaron preguntas para el examen.','#f59e0b'); return; }
+    estStatus(`Examen: ${d.num_questions} preguntas · cobertura ${(d.coverage*100).toFixed(0)}% de ${d.num_key_concepts} conceptos.`,'#6ee7b7');
+    const qs=d.questions.map((q,i)=>`<div class="est-card">
+      <div style="color:var(--muted);font-size:.72rem;">P${i+1} · ${q.type}</div>
+      <div style="font-weight:600;margin:5px 0;">${esc(q.prompt)}</div>
+      <input class="est-in" id="est-ex-${q.q_id}" placeholder="Tu respuesta…"></div>`).join('');
+    estArea(qs+`<button class="est-btn" onclick='estudiaSubmitExam(${JSON.stringify(d.questions.map(q=>q.q_id))})'>Entregar examen</button><div id="est-exam-res" style="margin-top:9px;"></div>`);
+  }catch(e){ estStatus('✗ '+e.message,'#f87171'); }
+}
+
+async function estudiaSubmitExam(qids){
+  const answers={}; qids.forEach(id=>{ const el=document.getElementById('est-ex-'+id); answers[id]=el?el.value:''; });
+  try{ const d=await estPost('/study/exam/submit',{exam_id:EST.exam,answers});
+    const color=d.score>=0.6?'#6ee7b7':'#f87171';
+    document.getElementById('est-exam-res').innerHTML=`<div class="est-card">
+      <div style="color:${color};font-weight:600;">Resultado: ${(d.score*100).toFixed(0)}% · ${d.num_questions} preguntas</div>
+      ${d.gaps&&d.gaps.length?`<div style="font-size:.76rem;color:var(--muted);">Conceptos a reforzar: ${d.gaps.map(esc).join(', ')}</div>`:'<div style="font-size:.76rem;color:#6ee7b7;">Sin lagunas detectadas 🎉</div>'}</div>`;
+  }catch(e){ estStatus('✗ '+e.message,'#f87171'); }
+}
+
 function showTab(name,btn){
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -1262,6 +1419,7 @@ function showTab(name,btn){
   if(name==='docs')      loadDocs();
   if(name==='providers'){ loadProviders(); checkOllama(); }
   if(name==='learnings') loadLearnings();
+  if(name==='estudia')   loadEstudia();
 }
 
 // ── Memory ─────────────────────────────────────────────────────────────────────

@@ -89,9 +89,14 @@ async def _run() -> bool:
     # 3. PDF escaneado -> reporta páginas que requieren OCR --------------------
     p = os.path.join(str(DOCUMENTS_DIR), _SCANNED_CANDIDATE)
     if os.path.exists(p):
-        res2 = await ingest_bridge.ingest_path(_SCANNED_CANDIDATE)
+        with open(p, "rb") as fh:
+            data = fh.read()
+        # allow_ocr=False para no OCR-ear 240 páginas en el test (solo verifica detección)
+        res2 = await ingest_bridge.ingest_pdf(_SCANNED_CANDIDATE, data, allow_ocr=False)
         passed &= _ok(res2.get("pages_needing_ocr", 0) > 0,
-                      f"PDF escaneado reporta pages_needing_ocr={res2.get('pages_needing_ocr')}")
+                      f"PDF escaneado SIN OCR reporta pages_needing_ocr={res2.get('pages_needing_ocr')}")
+        passed &= _ok(ingest_bridge.ocr_backend() is not None,
+                      "backend OCR disponible (tesseract+poppler) para procesarlo con allow_ocr=True")
     else:
         print("  [SKIP] PDF escaneado de referencia no presente.")
 
