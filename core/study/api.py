@@ -16,7 +16,8 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from . import (store, session as study_session, focus as study_focus,
-               generate as study_generate, extract as study_extract)
+               generate as study_generate, extract as study_extract,
+               structures as study_structures)
 from .models import StudyRequest, Focus, Question, GradeResult
 from .grounding import UngroundedError, resolve_evidence
 from .concept_graph import ConceptGraph
@@ -57,6 +58,16 @@ class AnswerIn(BaseModel):
 
 
 class ExtractIn(BaseModel):
+    corpus_ids: list[str]
+
+
+class CompareIn(BaseModel):
+    concept_a: str
+    concept_b: str
+
+
+class DebateIn(BaseModel):
+    topic: str
     corpus_ids: list[str]
 
 
@@ -165,3 +176,25 @@ async def study_hierarchy(root: str, max_levels: int = 5):
     levels = g.bfs_levels(root, max_levels=max_levels)
     return {"root": root, "num_levels": len(levels),
             "levels": [[g.label_of(k) for k in lvl] for lvl in levels]}
+
+
+@router.post("/compare")
+async def study_compare(body: CompareIn):
+    """Comparativa de 2 conceptos con evidencia de ambas fuentes."""
+    await store.ensure_migrated()
+    try:
+        comp = await study_structures.comparison(body.concept_a, body.concept_b)
+    except UngroundedError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    return asdict(comp)
+
+
+@router.post("/debate")
+async def study_debate(body: DebateIn):
+    """Debate cross-document: posiciones por documento sobre un tema, con cita."""
+    await store.ensure_migrated()
+    try:
+        deb = await study_structures.debate(body.topic, body.corpus_ids)
+    except UngroundedError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    return asdict(deb)
