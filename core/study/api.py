@@ -17,7 +17,7 @@ from pydantic import BaseModel
 
 from . import (store, session as study_session, focus as study_focus,
                generate as study_generate, extract as study_extract,
-               structures as study_structures)
+               structures as study_structures, ingest_bridge as study_ingest)
 from .models import StudyRequest, Focus, Question, GradeResult
 from .grounding import UngroundedError, resolve_evidence
 from .concept_graph import ConceptGraph
@@ -55,6 +55,10 @@ class AnswerIn(BaseModel):
     session_id: str
     q_id: str
     answer: str
+
+
+class IngestIn(BaseModel):
+    filename: str   # nombre dentro de documents/ o ruta absoluta
 
 
 class ExtractIn(BaseModel):
@@ -152,6 +156,16 @@ async def study_cite(chunk_ids: list[str]):
 # --------------------------------------------------------------------------- #
 # Ola 1 — Comprensión: conceptos y grafo
 # --------------------------------------------------------------------------- #
+@router.post("/ingest")
+async def study_ingest_endpoint(body: IngestIn):
+    """Ingiere un documento del corpus con número de página por chunk (PDF)."""
+    await store.ensure_migrated()
+    try:
+        return await study_ingest.ingest_path(body.filename)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 @router.post("/extract")
 async def study_extract_endpoint(body: ExtractIn):
     """Extrae conceptos/aristas anclados del corpus y construye el grafo."""
