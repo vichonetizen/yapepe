@@ -28,6 +28,7 @@ from core.study import llm as _llm  # noqa: E402
 from core.study.models import StudyRequest, Focus  # noqa: E402
 
 _llm.provider_available = lambda: False  # test determinista: fuerza ruta offline
+os.environ["ESTUDIA_EMBED"] = "off"      # ranking léxico determinista (sin Ollama)
 
 
 def _ok(cond: bool, msg: str) -> bool:

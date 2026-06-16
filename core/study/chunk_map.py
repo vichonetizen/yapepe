@@ -95,11 +95,22 @@ async def get_chunk(chunk_id: str) -> Chunk | None:
 
 
 async def topic_chunks(doc_ids: list[str], topic: str, top_k: int = 12) -> list[Chunk]:
-    """Chunks de los documentos rankeados por solapamiento léxico con `topic`.
+    """Chunks de los documentos rankeados por relevancia al `topic`.
 
-    Ranking lexical simple (v1): cuenta de términos del topic presentes en el chunk.
-    El ranking semántico (hybrid_search) se cableará en una ola posterior."""
+    Primero intenta ranking SEMÁNTICO (embeddings bge-m3 vía Ollama); si no hay
+    backend de embeddings, cae a ranking léxico (cuenta de términos)."""
     chunks = await get_chunks_for_docs(doc_ids)
+    if not chunks:
+        return []
+    # 1) Semántico (si hay embeddings disponibles)
+    try:
+        from . import embed as _embed
+        sem = await _embed.rank_by_similarity(topic, chunks, top_k)
+        if sem:
+            return sem
+    except Exception:
+        pass
+    # 2) Léxico (fallback)
     terms = [t for t in re.findall(r"[\wáéíóúüñ]+", (topic or "").lower()) if len(t) > 2]
     if not terms:
         return chunks[:top_k]
