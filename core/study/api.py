@@ -17,7 +17,9 @@ from pydantic import BaseModel
 
 from . import (store, session as study_session, focus as study_focus,
                generate as study_generate, extract as study_extract,
-               structures as study_structures, ingest_bridge as study_ingest)
+               structures as study_structures, ingest_bridge as study_ingest,
+               fsrs as study_fsrs, plan as study_plan, panel as study_panel,
+               exam as study_exam)
 from .models import StudyRequest, Focus, Question, GradeResult
 from .grounding import UngroundedError, resolve_evidence
 from .concept_graph import ConceptGraph
@@ -72,6 +74,31 @@ class CompareIn(BaseModel):
 
 class DebateIn(BaseModel):
     topic: str
+    corpus_ids: list[str]
+
+
+class EnsureCardsIn(BaseModel):
+    corpus_ids: list[str]
+
+
+class ReviewIn(BaseModel):
+    card_id: str
+    score: float   # 0..1 (de un GradeResult)
+
+
+class ExamStartIn(BaseModel):
+    corpus_ids: list[str]
+    coverage_target: float = 0.85
+    n: int = 10
+    time_limit: Optional[int] = None
+
+
+class ExamSubmitIn(BaseModel):
+    exam_id: str
+    answers: dict[str, str]
+
+
+class PanelIn(BaseModel):
     corpus_ids: list[str]
 
 
@@ -212,3 +239,64 @@ async def study_debate(body: DebateIn):
     except UngroundedError as e:
         raise HTTPException(status_code=422, detail=str(e))
     return asdict(deb)
+
+
+# --------------------------------------------------------------------------- #
+# Ola 4 — Memoria: FSRS, plan, panel, examen
+# --------------------------------------------------------------------------- #
+@router.post("/cards/ensure")
+async def study_cards_ensure(body: EnsureCardsIn):
+    """Crea una card por concepto del corpus (para repaso espaciado)."""
+    await store.ensure_migrated()
+    created = await study_fsrs.ensure_cards_for_corpus(body.corpus_ids)
+    return {"created": created}
+
+
+@router.post("/review")
+async def study_review(body: ReviewIn):
+    """Registra un repaso de card y aplica FSRS (due/interval/ease/lapses)."""
+    await store.ensure_migrated()
+    card = await study_fsrs.get_card(body.card_id)
+    if card is None:
+        raise HTTPException(status_code=404, detail=f"Card desconocida: {body.card_id}")
+    study_fsrs.review(card, body.score)
+    await study_fsrs.upsert_card(card)
+    d = asdict(card)
+    d["mastered"] = study_fsrs.is_mastered(card)
+    return d
+
+
+@router.get("/plan")
+async def study_plan_endpoint():
+    """Plan de aprendizaje: cards vencidas hoy + lo no dominado."""
+    await store.ensure_migrated()
+    return await study_plan.build_plan()
+
+
+@router.post("/panel")
+async def study_panel_endpoint(body: PanelIn):
+    """Panel de progreso: % dominio, repasos pendientes, 'listo para prueba'."""
+    await store.ensure_migrated()
+    return await study_panel.progress(body.corpus_ids)
+
+
+@router.post("/exam/start")
+async def study_exam_start(body: ExamStartIn):
+    """Inicia un examen que cubre >=coverage_target de los conceptos clave."""
+    await store.ensure_migrated()
+    res = await study_exam.start_exam(body.corpus_ids, body.coverage_target,
+                                      body.n, body.time_limit)
+    return {**{k: v for k, v in res.items() if k != "questions"},
+            "questions": [_q_dict(q) for q in res["questions"]]}
+
+
+@router.post("/exam/submit")
+async def study_exam_submit(body: ExamSubmitIn):
+    """Califica un examen (determinista, read-only) y devuelve el informe."""
+    await store.ensure_migrated()
+    try:
+        res = await study_exam.submit_exam(body.exam_id, body.answers)
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    return {**{k: v for k, v in res.items() if k != "results"},
+            "results": [_gr_dict(g) for g in res["results"]]}
