@@ -97,7 +97,7 @@ def _ocr_page(data: bytes, page_no: int) -> str:
         from pdf2image import convert_from_bytes
         if _TESS:
             pytesseract.pytesseract.tesseract_cmd = _TESS
-        kw = {"first_page": page_no, "last_page": page_no, "dpi": 200}
+        kw = {"first_page": page_no, "last_page": page_no, "dpi": 150}
         if _POPPLER:
             kw["poppler_path"] = _POPPLER
         imgs = convert_from_bytes(data, **kw)

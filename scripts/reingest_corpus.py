@@ -44,6 +44,24 @@ async def _delete_existing(filename):
         await conn.execute(text("DELETE FROM documents WHERE filename=:f"), {"f": filename})
 
 
+async def _existing_chunks(filename):
+    engine = store.get_engine()
+    async with engine.connect() as conn:
+        n = (await conn.execute(text(
+            "SELECT COALESCE(SUM(chunk_count),0) FROM documents WHERE filename=:f"),
+            {"f": filename})).scalar() or 0
+    return int(n)
+
+
+async def _doc_id(filename):
+    engine = store.get_engine()
+    async with engine.connect() as conn:
+        r = (await conn.execute(text(
+            "SELECT id FROM documents WHERE filename=:f ORDER BY id DESC LIMIT 1"),
+            {"f": filename})).scalar()
+    return str(r) if r else None
+
+
 async def main():
     await store.migrate()
     log(f"OCR backend: {ingest_bridge.ocr_backend()}")
@@ -54,6 +72,13 @@ async def main():
     for i, fn in enumerate(pdfs, 1):
         st = time.time()
         try:
+            # Reanudable: si ya está ingerido con contenido real (>1 chunk), saltar.
+            if await _existing_chunks(fn) > 1:
+                did = await _doc_id(fn)
+                if did:
+                    new_ids.append(did)
+                log(f"[{i}/{len(pdfs)}] = {fn[:48]} (ya ingerido, salto)")
+                continue
             await _delete_existing(fn)
             res = await ingest_bridge.ingest_path(fn)
             dt = time.time() - st
